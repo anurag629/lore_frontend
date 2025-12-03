@@ -15,7 +15,6 @@ import {
   Clock,
   Users,
   Zap,
-  Play,
   ChevronRight,
   Loader2,
   Star,
@@ -25,11 +24,7 @@ import {
   GitBranch,
   Globe,
   Lock,
-  DollarSign,
-  Timer,
-  Award,
-  Activity,
-  ExternalLink
+  Award
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
