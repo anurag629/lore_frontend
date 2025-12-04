@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Compass, BarChart3, User, Sparkles, Settings, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { Home, Compass, BarChart3, User, Sparkles, Settings, Plus, FolderOpen } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import MintModal from '@/components/mint/MintModal';
 import WalletConnect from '@/components/auth/WalletConnect';
+import { useKeyboardShortcutsContext } from '@/components/keyboard/KeyboardShortcutsProvider';
 
 interface NavItem {
   name: string;
@@ -19,16 +20,46 @@ const navItems: NavItem[] = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'Explore', href: '/explore', icon: Compass },
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'Profile', href: '/profile', icon: User },
+  { name: 'Collections', href: '/collections', icon: FolderOpen },
+  { name: 'Profile', href: '/profile', icon: User }, // Will redirect to /profile/[address]
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [isMintModalOpen, setIsMintModalOpen] = useState(false);
+  const [localMintModalOpen, setLocalMintModalOpen] = useState(false);
+  
+  // Try to use keyboard shortcuts context if available, otherwise use local state
+  let keyboardContext: ReturnType<typeof useKeyboardShortcutsContext> | null = null;
+  try {
+    keyboardContext = useKeyboardShortcutsContext();
+  } catch {
+    // Context not available, use local state
+  }
+
+  const isMintModalOpen = keyboardContext ? keyboardContext.isMintModalOpen : localMintModalOpen;
+
+  const handleOpenMintModal = () => {
+    if (keyboardContext) {
+      keyboardContext.openMintModal();
+    } else {
+      setLocalMintModalOpen(true);
+    }
+  };
+
+  const handleCloseMintModal = () => {
+    if (keyboardContext) {
+      keyboardContext.closeMintModal();
+    } else {
+      setLocalMintModalOpen(false);
+    }
+  };
 
   return (
     <>
-      <MintModal isOpen={isMintModalOpen} onClose={() => setIsMintModalOpen(false)} />
+      {/* MintModal is now rendered in KeyboardShortcutsProvider, but we keep local fallback */}
+      {!keyboardContext && (
+        <MintModal isOpen={isMintModalOpen} onClose={handleCloseMintModal} />
+      )}
 
       {/* Desktop Dock (Left Side) */}
       <motion.aside
@@ -86,7 +117,7 @@ export default function Sidebar() {
           {/* Actions */}
           <div className="flex flex-col gap-3">
             <button
-              onClick={() => setIsMintModalOpen(true)}
+              onClick={handleOpenMintModal}
               className="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white hover:scale-110 transition-transform shadow-lg shadow-amber-500/20 group relative"
             >
               <div className="absolute left-full ml-4 px-2 py-1 bg-slate-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 top-1/2 -translate-y-1/2">
@@ -136,7 +167,7 @@ export default function Sidebar() {
           })}
           
           <button
-            onClick={() => setIsMintModalOpen(true)}
+            onClick={handleOpenMintModal}
             className="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-white"
           >
             <div className="p-2 rounded-xl bg-gradient-to-br from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-500/20">

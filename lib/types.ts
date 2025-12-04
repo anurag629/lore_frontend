@@ -156,3 +156,32 @@ export interface AIPlatformStats extends AIUsageStats {
   rate_limited_requests: number;
   acceptance_rate: number;
 }
+
+// Comment Types
+export interface Comment {
+  id: number;
+  asset: number;
+  user: {
+    id: number;
+    wallet_address: string;
+    display_name: string;
+    avatar_url: string;
+  };
+  parent: number | null;
+  content: string;
+  reply_count: number;
+  is_deleted: boolean;
+  is_own_comment: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommentCreate {
+  asset: number;
+  parent?: number | null;
+  content: string;
+}
+
+export interface CommentUpdate {
+  content: string;
+}

@@ -8,6 +8,9 @@ import { injected, walletConnect } from 'wagmi/connectors'
 // WalletConnect Project ID (you should get this from https://cloud.walletconnect.com/)
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id'
 
+// App URL for WalletConnect metadata (use env var or default to localhost:3000)
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
 export const config = createConfig({
   chains: [mainnet, sepolia],
   connectors: [
@@ -18,7 +21,7 @@ export const config = createConfig({
       metadata: {
         name: 'Lore',
         description: 'Create, Remix, and Earn Forever',
-        url: 'http://localhost:3001',
+        url: appUrl,
         icons: ['https://avatars.githubusercontent.com/u/37784886']
       }
     }),

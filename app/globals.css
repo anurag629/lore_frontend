@@ -52,6 +52,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -75,4 +76,27 @@ body {
 ::selection {
   background: #f59e0b;
   color: white;
+}
+
+/* react-easy-crop styles */
+.reactEasyCrop_Container {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+.reactEasyCrop_Image {
+  max-width: unset !important;
+  max-height: unset !important;
+  user-select: none !important;
+}
+
+.reactEasyCrop_CropArea {
+  border: 2px solid rgba(251, 191, 36, 0.8) !important;
+  box-shadow: 0 0 0 9999em rgba(0, 0, 0, 0.5) !important;
+}
+
+.reactEasyCrop_CropAreaRound {
+  border-radius: 50% !important;
 }

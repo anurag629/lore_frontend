@@ -2,10 +2,11 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Upload, Check, AlertCircle, Loader2, Wand2 } from 'lucide-react';
-import { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import { useState, useRef, DragEvent, ChangeEvent, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import { useCreateAsset } from '@/hooks/useAssets';
 import { useGenerateTitle, useEnhanceDescription, useSuggestLicense } from '@/hooks/useAI';
+import { useToast } from '@/components/ui/Toast';
 import type { CreateIPAssetData } from '@/types/api';
 
 interface MintModalProps {
@@ -31,6 +32,7 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { createAsset, loading, error, clearError } = useCreateAsset();
+  const { showToast } = useToast();
 
   // AI hooks
   const generateTitle = useGenerateTitle();
@@ -40,7 +42,7 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
   // Handle AI Title Generation
   const handleGenerateTitle = async () => {
     if (!formData.description.trim()) {
-      alert('Please enter a description first');
+      showToast('Please enter a description first', 'warning');
       return;
     }
 
@@ -51,16 +53,17 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
       });
       setTitleSuggestions(result.titles);
       setShowTitleSuggestions(true);
+      showToast('Title suggestions generated!', 'success');
     } catch (err) {
       console.error('Failed to generate titles:', err);
-      alert('Failed to generate title suggestions. Please try again.');
+      showToast('Failed to generate title suggestions. Please try again.', 'error');
     }
   };
 
   // Handle AI Description Enhancement
   const handleEnhanceDescription = async () => {
     if (!formData.description.trim()) {
-      alert('Please enter a brief description first');
+      showToast('Please enter a brief description first', 'warning');
       return;
     }
 
@@ -71,16 +74,17 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
         asset_type: 'digital_art'
       });
       setFormData({ ...formData, description: result.enhanced_description });
+      showToast('Description enhanced!', 'success');
     } catch (err) {
       console.error('Failed to enhance description:', err);
-      alert('Failed to enhance description. Please try again.');
+      showToast('Failed to enhance description. Please try again.', 'error');
     }
   };
 
   // Handle AI License Suggestion
   const handleSuggestLicense = async () => {
     if (!formData.description.trim()) {
-      alert('Please enter a description first');
+      showToast('Please enter a description first', 'warning');
       return;
     }
 
@@ -96,9 +100,10 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
         allow_derivatives: result.allow_derivatives,
         commercial_rights: result.commercial_rights
       });
+      showToast('License terms suggested!', 'success');
     } catch (err) {
       console.error('Failed to suggest license:', err);
-      alert('Failed to generate license suggestion. Please try again.');
+      showToast('Failed to generate license suggestion. Please try again.', 'error');
     }
   };
 
@@ -125,14 +130,14 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
   const handleFileSelect = (selectedFile: File) => {
     // Validate file size (50MB max)
     if (selectedFile.size > 50 * 1024 * 1024) {
-      alert('File size must be less than 50MB');
+      showToast('File size must be less than 50MB', 'error');
       return;
     }
 
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
     if (!validTypes.includes(selectedFile.type)) {
-      alert('File must be JPG, PNG, GIF, or MP4');
+      showToast('File must be JPG, PNG, GIF, or MP4', 'error');
       return;
     }
 
@@ -155,12 +160,12 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
     e.preventDefault();
 
     if (!formData.title.trim()) {
-      alert('Please enter a title');
+      showToast('Please enter a title', 'warning');
       return;
     }
 
     if (!formData.description.trim()) {
-      alert('Please enter a description');
+      showToast('Please enter a description', 'warning');
       return;
     }
 
@@ -199,6 +204,20 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
     clearError();
     onClose();
   };
+
+  // Handle Escape key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !loading) {
+        handleClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen, loading]);
 
   return (
     <AnimatePresence>

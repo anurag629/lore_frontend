@@ -1,19 +1,28 @@
 'use client';
 
-import { Search, Filter, TrendingUp, Clock, Flame, Loader2, AlertCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Search, Filter, TrendingUp, Clock, Flame, Loader2, AlertCircle, FileText } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAssets } from '@/hooks/useAssets';
 import Link from 'next/link';
-
-const categories = ['All', 'Original', 'Derivative'];
-const sortOptions = ['Most Recent', 'Most Derivatives'];
+import { AssetCardSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
+import OptimizedImage from '@/components/ui/OptimizedImage';
+import MintModal from '@/components/mint/MintModal';
+import { SearchFilters } from '@/components/explore/SearchFilters';
 
 export default function Explore() {
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedSort, setSelectedSort] = useState('Most Recent');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [filters, setFilters] = useState({
+    isDerivative: undefined as boolean | undefined,
+    allowDerivatives: undefined as boolean | undefined,
+    commercialRights: undefined as boolean | undefined,
+    royaltyMin: undefined as number | undefined,
+    royaltyMax: undefined as number | undefined,
+  });
+  const [sortBy, setSortBy] = useState('-created_at');
   const [page, setPage] = useState(1);
+  const [isMintModalOpen, setIsMintModalOpen] = useState(false);
 
   // Debounce search input
   useEffect(() => {
@@ -26,11 +35,28 @@ export default function Explore() {
   }, [searchQuery]);
 
   // Determine API params based on filters
-  const apiParams = {
+  const apiParams: any = {
     search: debouncedSearch || undefined,
-    is_derivative: selectedCategory === 'Derivative' ? true : selectedCategory === 'Original' ? false : undefined,
     page,
+    ordering: sortBy,
   };
+
+  // Add filters to API params
+  if (filters.isDerivative !== undefined) {
+    apiParams.is_derivative = filters.isDerivative;
+  }
+  if (filters.allowDerivatives !== undefined) {
+    apiParams.allow_derivatives = filters.allowDerivatives;
+  }
+  if (filters.commercialRights !== undefined) {
+    apiParams.commercial_rights = filters.commercialRights;
+  }
+  if (filters.royaltyMin !== undefined) {
+    apiParams.royalty_percentage_min = filters.royaltyMin;
+  }
+  if (filters.royaltyMax !== undefined) {
+    apiParams.royalty_percentage_max = filters.royaltyMax;
+  }
 
   const { assets, loading, error, pagination, refetch } = useAssets(apiParams);
 
@@ -47,8 +73,10 @@ export default function Explore() {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
+    <>
+      <MintModal isOpen={isMintModalOpen} onClose={() => setIsMintModalOpen(false)} />
+      <div className="min-h-screen p-4 sm:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Explore IP Assets</h1>
@@ -58,55 +86,33 @@ export default function Explore() {
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-6 sm:mb-8 space-y-4">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search for IP assets by title..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 bg-slate-900 border border-slate-800 rounded-lg text-sm sm:text-base text-slate-50 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
-            />
-          </div>
-
-          {/* Category and Sort Filters */}
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center lg:justify-between">
-            {/* Categories */}
-            <div className="flex flex-wrap gap-2 w-full lg:w-auto">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => {
-                    setSelectedCategory(category);
-                    setPage(1);
-                  }}
-                  className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 ${
-                    selectedCategory === category
-                      ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/50'
-                      : 'bg-slate-900 text-slate-400 hover:text-slate-50 hover:bg-slate-800 border border-slate-800'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+        <div className="mb-6 sm:mb-8">
+          <SearchFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            filters={filters}
+            onFiltersChange={setFilters}
+            sortBy={sortBy}
+            onSortChange={(sort) => {
+              setSortBy(sort);
+              setPage(1);
+            }}
+          />
+          
+          {/* Results Count */}
+          {pagination && (
+            <div className="mt-4 text-sm text-slate-400">
+              {pagination.count} asset{pagination.count !== 1 ? 's' : ''} found
             </div>
-
-            {/* Results Count */}
-            {pagination && (
-              <div className="text-sm text-slate-400">
-                {pagination.count} asset{pagination.count !== 1 ? 's' : ''} found
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Loading State */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-12 h-12 text-amber-500 animate-spin mb-4" />
-            <p className="text-slate-400">Loading assets...</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {[...Array(6)].map((_, i) => (
+              <AssetCardSkeleton key={i} />
+            ))}
           </div>
         )}
 
@@ -131,17 +137,23 @@ export default function Explore() {
 
         {/* Empty State */}
         {!loading && !error && assets.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-4">
-              <Search className="w-10 h-10 text-slate-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-slate-300 mb-2">No assets found</h3>
-            <p className="text-slate-500 text-center max-w-md">
-              {searchQuery
+          <EmptyState
+            icon={searchQuery ? Search : FileText}
+            title={searchQuery ? 'No assets found' : 'No assets yet'}
+            description={
+              searchQuery
                 ? `No assets match your search "${searchQuery}". Try different keywords.`
-                : 'No assets have been created yet. Be the first to mint an IP asset!'}
-            </p>
-          </div>
+                : 'No assets have been created yet. Be the first to mint an IP asset!'
+            }
+            action={
+              !searchQuery
+                ? {
+                    label: 'Mint Your First Asset',
+                    onClick: () => setIsMintModalOpen(true),
+                  }
+                : undefined
+            }
+          />
         )}
 
         {/* Asset Grid */}
@@ -157,10 +169,11 @@ export default function Explore() {
                   {/* Thumbnail */}
                   <div className="relative h-40 sm:h-48 bg-slate-800 overflow-hidden">
                     {asset.media_url && asset.media_url !== 'https://placeholder.example.com/media' ? (
-                      <img
+                      <OptimizedImage
                         src={asset.media_url}
                         alt={asset.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-300"
                       />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-amber-600/20 to-orange-600/20 flex items-center justify-center">
@@ -297,7 +310,8 @@ export default function Explore() {
             )}
           </>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

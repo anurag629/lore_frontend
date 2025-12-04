@@ -5,6 +5,7 @@ import { X, Sparkles, Upload, Check, AlertCircle, Loader2, GitBranch, Info } fro
 import { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import Button from '@/components/ui/Button';
 import { useCreateDerivative } from '@/hooks/useAssets';
+import { useToast } from '@/components/ui/Toast';
 import type { CreateDerivativeData } from '@/types/api';
 import type { IPAsset } from '@/types/api';
 
@@ -28,6 +29,7 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { createDerivative, loading, error, clearError } = useCreateDerivative();
+  const { showToast } = useToast();
 
   // Format wallet address for display
   const formatAddress = (address: string) => {
@@ -58,14 +60,14 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
   const handleFileSelect = (selectedFile: File) => {
     // Validate file size (50MB max)
     if (selectedFile.size > 50 * 1024 * 1024) {
-      alert('File size must be less than 50MB');
+      showToast('File size must be less than 50MB', 'error');
       return;
     }
 
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
     if (!validTypes.includes(selectedFile.type)) {
-      alert('File must be JPG, PNG, GIF, or MP4');
+      showToast('File must be JPG, PNG, GIF, or MP4', 'error');
       return;
     }
 
@@ -88,12 +90,12 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
     e.preventDefault();
 
     if (!formData.title.trim()) {
-      alert('Please enter a title');
+      showToast('Please enter a title', 'warning');
       return;
     }
 
     if (!formData.description.trim()) {
-      alert('Please enter a description');
+      showToast('Please enter a description', 'warning');
       return;
     }
 

@@ -122,11 +122,30 @@ export function useAuth() {
     } catch (error: any) {
       console.error('Login error:', error);
 
-      const errorMessage =
-        error.response?.data?.detail ||
-        error.response?.data?.signature?.[0] ||
-        error.message ||
-        'Failed to sign in. Please try again.';
+      // Extract error message safely - ensure it's always a string
+      let errorMessage = 'Failed to sign in. Please try again.';
+      
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.detail) {
+          errorMessage = typeof error.response.data.detail === 'string' 
+            ? error.response.data.detail 
+            : JSON.stringify(error.response.data.detail);
+        } else if (error.response.data.signature?.[0]) {
+          errorMessage = error.response.data.signature[0];
+        } else if (error.response.data.error) {
+          errorMessage = typeof error.response.data.error === 'string'
+            ? error.response.data.error
+            : JSON.stringify(error.response.data.error);
+        } else if (error.response.data.message) {
+          errorMessage = typeof error.response.data.message === 'string'
+            ? error.response.data.message
+            : JSON.stringify(error.response.data.message);
+        }
+      } else if (error.message) {
+        errorMessage = typeof error.message === 'string' ? error.message : String(error.message);
+      }
 
       setAuthState({
         user: null,

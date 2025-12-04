@@ -17,12 +17,21 @@ import {
   Sparkles,
   CheckCircle2,
   XCircle,
-  Coins
+  Coins,
+  Heart,
+  Bookmark
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import Button from '@/components/ui/Button';
 import RemixModal from '@/components/mint/RemixModal';
+import EditAssetModal from '@/components/mint/EditAssetModal';
+import ShareModal from '@/components/share/ShareModal';
+import { useToast } from '@/components/ui/Toast';
+import { useClipboard } from '@/hooks/useClipboard';
+import { useToggleFavorite, useIsFavorited } from '@/hooks/useFavorites';
+import OptimizedImage from '@/components/ui/OptimizedImage';
+import CommentsSection from '@/components/comments/CommentsSection';
 
 export default function AssetDetailPage() {
   const params = useParams();
@@ -31,6 +40,15 @@ export default function AssetDetailPage() {
   const { asset, loading, error, refetch } = useAsset(assetId);
   const { user, isAuthenticated } = useAuth();
   const [showRemixModal, setShowRemixModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const { showToast } = useToast();
+  const { copy } = useClipboard();
+  
+  // Favorites
+  const { data: favoriteData } = useIsFavorited(assetId);
+  const toggleFavorite = useToggleFavorite();
+  const isFavorited = favoriteData?.favorited || false;
 
   // Royalty claiming
   const { balance, loading: balanceLoading, refetch: refetchBalance } = useRoyaltyBalance(assetId);
@@ -54,12 +72,6 @@ export default function AssetDetailPage() {
     });
   };
 
-  // Copy to clipboard
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // You could add a toast notification here
-  };
-
   // Handle royalty claiming
   const handleClaimRoyalties = async () => {
     if (!assetId) return;
@@ -68,7 +80,7 @@ export default function AssetDetailPage() {
     if (result) {
       // Refresh balance after successful claim
       refetchBalance();
-      alert(`Successfully claimed ${result.amount} ETH in royalties!`);
+      showToast(`Successfully claimed ${result.amount} ETH in royalties!`, 'success');
     }
   };
 
@@ -138,10 +150,11 @@ export default function AssetDetailPage() {
             <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
               <div className="aspect-video bg-slate-800 relative">
                 {asset.media_url && asset.media_url !== 'https://placeholder.example.com/media' ? (
-                  <img
+                  <OptimizedImage
                     src={asset.media_url}
                     alt={asset.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 ) : (
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-600/20 to-orange-600/20 flex items-center justify-center">
@@ -164,7 +177,7 @@ export default function AssetDetailPage() {
                   )}
 
                   <button
-                    onClick={() => copyToClipboard(window.location.href)}
+                    onClick={() => copy(window.location.href, 'Link')}
                     className="ml-auto bg-slate-900/80 backdrop-blur-sm hover:bg-slate-900 p-2 rounded-lg border border-slate-700 transition-colors"
                   >
                     <Share2 className="w-5 h-5 text-slate-300" />
@@ -182,7 +195,7 @@ export default function AssetDetailPage() {
                     </p>
                   </div>
                   <button
-                    onClick={() => copyToClipboard(asset.story_ip_id)}
+                    onClick={() => copy(asset.story_ip_id, 'IP ID')}
                     className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-lg transition-colors"
                   >
                     Copy
@@ -204,10 +217,11 @@ export default function AssetDetailPage() {
                 >
                   <div className="w-12 h-12 bg-slate-700 rounded-lg overflow-hidden flex-shrink-0">
                     {asset.parent_asset.media_url && asset.parent_asset.media_url !== 'https://placeholder.example.com/media' ? (
-                      <img
+                      <OptimizedImage
                         src={asset.parent_asset.media_url}
                         alt={asset.parent_asset.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
@@ -233,9 +247,39 @@ export default function AssetDetailPage() {
           <div className="space-y-6">
             {/* Title and Description */}
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-slate-50 mb-4">
-                {asset.title}
-              </h1>
+              <div className="flex items-start justify-between mb-4">
+                <h1 className="text-3xl sm:text-4xl font-bold text-slate-50 flex-1">
+                  {asset.title}
+                </h1>
+                <div className="flex items-center gap-2 ml-4">
+                  {/* Favorite Button */}
+                  {isAuthenticated && (
+                    <button
+                      onClick={() => assetId && toggleFavorite.mutate(assetId)}
+                      disabled={toggleFavorite.isPending}
+                      className={`p-3 rounded-lg transition-all ${
+                        isFavorited
+                          ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                          : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-red-400'
+                      }`}
+                      title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                    >
+                      <Heart
+                        className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`}
+                      />
+                    </button>
+                  )}
+                  
+                  {/* Share Button */}
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    className="p-3 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-amber-400 rounded-lg transition-all"
+                    title="Share"
+                  >
+                    <Share2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
               <p className="text-slate-300 leading-relaxed">
                 {asset.description}
               </p>
@@ -406,7 +450,7 @@ export default function AssetDetailPage() {
                     if (isAuthenticated) {
                       setShowRemixModal(true);
                     } else {
-                      alert('Please connect your wallet to create a remix');
+                      showToast('Please connect your wallet to create a remix', 'warning');
                     }
                   }}
                 >
@@ -419,13 +463,10 @@ export default function AssetDetailPage() {
                 <Button
                   variant="outline"
                   className="flex-1 py-3"
-                  onClick={() => {
-                    // TODO: Implement manage asset functionality
-                    alert('Manage functionality coming soon!');
-                  }}
+                  onClick={() => setShowEditModal(true)}
                 >
                   <Shield className="w-5 h-5 mr-2" />
-                  Manage Asset
+                  Edit Asset
                 </Button>
               )}
 
@@ -494,6 +535,9 @@ export default function AssetDetailPage() {
           </div>
         )}
 
+        {/* Comments Section */}
+        <CommentsSection assetId={asset.id} />
+
         {/* Metadata Section */}
         <div className="mt-12 bg-slate-900 rounded-xl border border-slate-800 p-6">
           <h2 className="text-xl font-bold text-slate-50 mb-4">Asset Metadata</h2>
@@ -529,6 +573,17 @@ export default function AssetDetailPage() {
           refetch(); // Refresh asset data to show new derivative
         }}
         parentAsset={asset}
+      />
+
+      {/* Edit Asset Modal */}
+      <EditAssetModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={() => {
+          setShowEditModal(false);
+          refetch(); // Refresh asset data after update
+        }}
+        asset={asset}
       />
     </div>
   );

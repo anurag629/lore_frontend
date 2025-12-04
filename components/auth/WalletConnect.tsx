@@ -14,6 +14,12 @@ export default function WalletConnect() {
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Auto-login when wallet connects
   useEffect(() => {
@@ -63,6 +69,16 @@ export default function WalletConnect() {
       setIsSigning(false);
     }
   };
+
+  // Prevent hydration mismatch - show loading until mounted
+  if (!mounted) {
+    return (
+      <Button variant="secondary" disabled>
+        <Loader2 className="w-4 h-4 animate-spin" />
+        <span>Loading...</span>
+      </Button>
+    );
+  }
 
   // Show loading state
   if (isConnecting || (isConnected && isSigning)) {
@@ -120,7 +136,9 @@ export default function WalletConnect() {
           )}
         </Button>
         {error && (
-          <p className="text-xs text-red-400 text-center max-w-xs">{error}</p>
+          <p className="text-xs text-red-400 text-center max-w-xs">
+            {typeof error === 'string' ? error : JSON.stringify(error)}
+          </p>
         )}
       </div>
     );

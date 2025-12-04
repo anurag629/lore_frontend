@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, FileText, GitBranch, Eye, Loader2, AlertCircle } from 'lucide-react';
+import { TrendingUp, FileText, GitBranch, Eye, Loader2, AlertCircle, BarChart3, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAssets } from '@/hooks/useAssets';
 import Link from 'next/link';
@@ -58,11 +58,22 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">Creator Dashboard</h1>
-          <p className="text-sm sm:text-base text-slate-400">Track your earnings, assets, and performance</p>
-          <p className="text-xs text-slate-500 mt-2 font-mono">
-            {formatAddress(user.wallet_address)}
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold mb-2">Creator Dashboard</h1>
+              <p className="text-sm sm:text-base text-slate-400">Track your earnings, assets, and performance</p>
+              <p className="text-xs text-slate-500 mt-2 font-mono">
+                {formatAddress(user.wallet_address)}
+              </p>
+            </div>
+            <Link
+              href="/dashboard/ai-analytics"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-500 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
+            >
+              <Zap className="w-4 h-4" />
+              <span className="hidden sm:inline">AI Analytics</span>
+            </Link>
+          </div>
         </div>
 
         {/* Metrics Cards */}

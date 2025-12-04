@@ -41,7 +41,22 @@ export function useAssets(params?: {
         previous: response.previous,
       });
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch assets');
+      // Extract error message safely
+      let errorMessage = 'Failed to fetch assets';
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        } else if (err.response.data.detail) {
+          errorMessage = err.response.data.detail;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
       console.error('Error fetching assets:', err);
     } finally {
       setLoading(false);
@@ -79,7 +94,22 @@ export function useAsset(id: number | null) {
       const data: IPAsset = await assetsAPI.getAsset(id);
       setAsset(data);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch asset');
+      // Extract error message safely
+      let errorMessage = 'Failed to fetch asset';
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        } else if (err.response.data.detail) {
+          errorMessage = err.response.data.detail;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
       console.error('Error fetching asset:', err);
     } finally {
       setLoading(false);
@@ -245,5 +275,63 @@ export function useRoyaltyBalance(assetId: number | null) {
     loading,
     error,
     refetch: fetchBalance,
+  };
+}
+
+// Hook to update asset
+export function useUpdateAsset() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const updateAsset = async (id: number, data: { title: string; description: string }): Promise<IPAsset | null> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result: IPAsset = await assetsAPI.updateAsset(id, data);
+      return result;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || err.response?.data?.error || 'Failed to update asset';
+      setError(errorMessage);
+      console.error('Error updating asset:', err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    updateAsset,
+    loading,
+    error,
+    clearError: () => setError(null),
+  };
+}
+
+// Hook to delete asset
+export function useDeleteAsset() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const deleteAsset = async (id: number): Promise<boolean> => {
+    try {
+      setLoading(true);
+      setError(null);
+      await assetsAPI.deleteAsset(id);
+      return true;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || err.response?.data?.error || 'Failed to delete asset';
+      setError(errorMessage);
+      console.error('Error deleting asset:', err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    deleteAsset,
+    loading,
+    error,
+    clearError: () => setError(null),
   };
 }

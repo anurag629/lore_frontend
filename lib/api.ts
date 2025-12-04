@@ -216,6 +216,38 @@ export const authAPI = {
     tokenManager.setUser(response.data);
     return response.data;
   },
+
+  // Upload avatar image
+  uploadAvatar: async (file: File) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await api.post('/api/auth/profile/avatar/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    tokenManager.setUser(response.data.user);
+    return response.data;
+  },
+
+  // Upload banner image
+  uploadBanner: async (file: File) => {
+    const formData = new FormData();
+    formData.append('banner', file);
+    const response = await api.post('/api/auth/profile/banner/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    tokenManager.setUser(response.data.user);
+    return response.data;
+  },
+
+  // Get user by wallet address
+  getUserByAddress: async (walletAddress: string) => {
+    const response = await api.get(`/api/auth/user/${walletAddress}/`);
+    return response.data;
+  },
 };
 
 // IP Assets API endpoints
@@ -280,6 +312,114 @@ export const assetsAPI = {
     const response = await api.get('/api/assets/royalties/', {
       params: { page },
     });
+    return response.data;
+  },
+
+  // Update asset (only title and description)
+  updateAsset: async (id: number, data: { title: string; description: string }) => {
+    const response = await api.patch(`/api/assets/assets/${id}/`, data);
+    return response.data;
+  },
+
+  // Delete asset (soft delete)
+  deleteAsset: async (id: number) => {
+    const response = await api.delete(`/api/assets/assets/${id}/`);
+    return response.data;
+  },
+};
+
+// Collections API endpoints
+export const collectionsAPI = {
+  // Get list of collections
+  getCollections: async (params?: {
+    creator?: number;
+    is_public?: boolean;
+  }) => {
+    const response = await api.get('/api/assets/collections/', { params });
+    return response.data;
+  },
+
+  // Get single collection by ID
+  getCollection: async (id: number) => {
+    const response = await api.get(`/api/assets/collections/${id}/`);
+    return response.data;
+  },
+
+  // Create new collection
+  createCollection: async (data: {
+    title: string;
+    description?: string;
+    cover_image_url?: string;
+    is_public?: boolean;
+    asset_ids?: number[];
+  }) => {
+    const response = await api.post('/api/assets/collections/', data);
+    return response.data;
+  },
+
+  // Update collection
+  updateCollection: async (id: number, data: {
+    title?: string;
+    description?: string;
+    cover_image_url?: string;
+    is_public?: boolean;
+    asset_ids?: number[];
+  }) => {
+    const response = await api.patch(`/api/assets/collections/${id}/`, data);
+    return response.data;
+  },
+
+  // Delete collection
+  deleteCollection: async (id: number) => {
+    const response = await api.delete(`/api/assets/collections/${id}/`);
+    return response.data;
+  },
+
+  // Add asset to collection
+  addAssetToCollection: async (collectionId: number, assetId: number) => {
+    const response = await api.post(`/api/assets/collections/${collectionId}/add_asset/`, {
+      asset_id: assetId,
+    });
+    return response.data;
+  },
+
+  // Remove asset from collection
+  removeAssetFromCollection: async (collectionId: number, assetId: number) => {
+    const response = await api.post(`/api/assets/collections/${collectionId}/remove_asset/`, {
+      asset_id: assetId,
+    });
+    return response.data;
+  },
+};
+
+// Favorites API endpoints
+export const favoritesAPI = {
+  // Get user's favorites
+  getFavorites: async (userId?: number) => {
+    const params = userId ? { user: userId } : {};
+    const response = await api.get('/api/assets/favorites/', { params });
+    return response.data;
+  },
+
+  // Toggle favorite status
+  toggleFavorite: async (assetId: number) => {
+    const response = await api.post('/api/assets/favorites/toggle/', {
+      asset_id: assetId,
+    });
+    return response.data;
+  },
+
+  // Check if asset is favorited
+  checkFavorite: async (assetId: number) => {
+    const response = await api.get('/api/assets/favorites/check/', {
+      params: { asset_id: assetId },
+    });
+    return response.data;
+  },
+
+  // Remove favorite
+  removeFavorite: async (favoriteId: number) => {
+    const response = await api.delete(`/api/assets/favorites/${favoriteId}/`);
     return response.data;
   },
 };

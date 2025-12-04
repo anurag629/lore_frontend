@@ -10,6 +10,7 @@ export interface User {
   display_name: string;
   bio: string;
   avatar_url: string;
+  banner_url?: string;
   total_earnings: string;
   assets_count: number;
   total_spinoffs: number;
