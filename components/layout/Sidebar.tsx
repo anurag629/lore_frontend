@@ -83,7 +83,10 @@ export default function Sidebar() {
           <nav className="flex flex-col gap-3">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href;
+              // Special handling for Profile route - match /profile and /profile/[address]
+              const isActive = item.href === '/profile' 
+                ? pathname === '/profile' || pathname.startsWith('/profile/')
+                : pathname === item.href;
 
               return (
                 <Link
@@ -139,7 +142,10 @@ export default function Sidebar() {
         <div className="glass rounded-2xl p-2 flex items-center justify-around shadow-2xl shadow-black/50 border border-white/10 bg-slate-950/90 backdrop-blur-xl">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            // Special handling for Profile route - match /profile and /profile/[address]
+            const isActive = item.href === '/profile' 
+              ? pathname === '/profile' || pathname.startsWith('/profile/')
+              : pathname === item.href;
 
             return (
               <Link
