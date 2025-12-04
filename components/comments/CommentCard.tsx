@@ -94,7 +94,7 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
                 {comment.user.display_name || formatAddress(comment.user.wallet_address)}
               </p>
               <p className="text-xs text-slate-400">
-                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                {formatDistanceToNow(new Date(comment.created_at))}
               </p>
             </div>
           </div>

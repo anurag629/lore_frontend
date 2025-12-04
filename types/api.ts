@@ -15,6 +15,7 @@ export interface User {
   assets_count: number;
   total_spinoffs: number;
   is_active: boolean;
+  is_staff?: boolean;
   created_at: string;
 }
 

@@ -1,4 +1,6 @@
 import type { NextConfig } from "next";
+// @ts-expect-error - webpack is provided by Next.js at runtime
+import webpack from "webpack";
 
 const nextConfig: NextConfig = {
   // Exclude problematic packages from server-side rendering
@@ -64,6 +66,42 @@ const nextConfig: NextConfig = {
     config.module.rules.push({
       test: /node_modules\/thread-stream\/bench\.js$/,
       use: 'ignore-loader',
+    });
+
+    // Ignore optional wagmi connector dependencies that aren't installed
+    // These are peer dependencies that are only needed if you use those specific connectors
+    if (!config.plugins) {
+      config.plugins = [];
+    }
+    
+    // Use IgnorePlugin to ignore optional dependencies
+    const optionalDependencies = [
+      '@base-org/account',
+      '@coinbase/wallet-sdk',
+      '@gemini-wallet/core',
+      '@metamask/sdk',
+      'porto',
+      '@safe-global/safe-apps-sdk',
+      '@safe-global/safe-apps-provider'
+    ];
+    
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        checkResource(resource: string) {
+          return optionalDependencies.some(dep => resource === dep || resource.startsWith(dep + '/'));
+        }
+      })
+    );
+    
+    // Also set resolve.alias to false as a fallback
+    if (!config.resolve) {
+      config.resolve = {};
+    }
+    if (!config.resolve.alias) {
+      config.resolve.alias = {};
+    }
+    optionalDependencies.forEach(dep => {
+      config.resolve!.alias![dep] = false;
     });
 
     return config;

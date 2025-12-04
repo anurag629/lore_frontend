@@ -244,7 +244,7 @@ export default function AIAnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
-                    label={({ content_type, count }) => `${content_type}: ${count}`}
+                    label={(entry: any) => `${entry.content_type}: ${entry.count}`}
                   >
                     {userStats.by_content_type.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -305,7 +305,7 @@ export default function AIAnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
-                    label={({ model_used, count }) => `${model_used}: ${count}`}
+                    label={(entry: any) => `${entry.model_used}: ${entry.count}`}
                   >
                     {platformStats.by_model.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

@@ -40,7 +40,7 @@ export function SearchFilters({
     onFiltersChange({});
   };
 
-  const hasActiveFilters = Object.values(filters).some(v => v !== undefined && v !== '');
+  const hasActiveFilters = Object.values(filters).some(v => v !== undefined);
 
   return (
     <div className="space-y-4">
@@ -67,7 +67,7 @@ export function SearchFilters({
           <span>Filters</span>
           {hasActiveFilters && (
             <span className="px-2 py-0.5 bg-amber-600 text-white text-xs rounded-full">
-              {Object.values(filters).filter(v => v !== undefined && v !== '').length}
+              {Object.values(filters).filter(v => v !== undefined).length}
             </span>
           )}
           <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />

@@ -122,12 +122,10 @@ export default function CollectionsPage() {
           icon={FolderOpen}
           title="No Collections Yet"
           description="Create your first collection to organize your favorite assets"
-          action={
-            <Button onClick={() => setIsModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Collection
-            </Button>
-          }
+          action={{
+            label: "Create Collection",
+            onClick: () => setIsModalOpen(true)
+          }}
         />
       )}
 

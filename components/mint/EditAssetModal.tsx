@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import { useUpdateAsset, useDeleteAsset } from '@/hooks/useAssets';
 import { useEnhanceDescription } from '@/hooks/useAI';
 import { useToast } from '@/components/ui/Toast';
-import type { IPAsset } from '@/lib/types';
+import type { IPAsset } from '@/types/api';
 
 interface EditAssetModalProps {
   isOpen: boolean;

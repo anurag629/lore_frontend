@@ -24,7 +24,7 @@ export default function CollectionDetailPage() {
   const params = useParams();
   const router = useRouter();
   const collectionId = params?.id ? parseInt(params.id as string) : null;
-  const { collection, isLoading, error } = useCollection(collectionId || 0);
+  const { data: collection, isLoading, error } = useCollection(collectionId || 0);
   const { user, isAuthenticated } = useAuth();
   const { showToast } = useToast();
   const removeAsset = useRemoveAssetFromCollection();

@@ -22,7 +22,7 @@ export default function ShareModal({
   url,
   description,
 }: ShareModalProps) {
-  const { copy, copied } = useClipboard();
+  const { copy } = useClipboard();
   const { showToast } = useToast();
   const [copiedUrl, setCopiedUrl] = useState(false);
 
@@ -127,7 +127,8 @@ export default function ShareModal({
                     />
                     <Button
                       onClick={handleCopy}
-                      variant={copiedUrl ? 'success' : 'secondary'}
+                      variant={copiedUrl ? 'primary' : 'secondary'}
+                      className={copiedUrl ? 'bg-green-600 hover:bg-green-700' : ''}
                     >
                       {copiedUrl ? (
                         <>

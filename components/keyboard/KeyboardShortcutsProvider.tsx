@@ -40,22 +40,22 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
       router.push('/explore');
       // Small delay to ensure page is loaded before focusing
       setTimeout(() => {
-        const searchInput = document.getElementById('search-input') || 
+        const searchInput = document.getElementById('search-input') as HTMLInputElement | null || 
           document.querySelector<HTMLInputElement>(
             'input[type="text"][placeholder*="Search" i], input[type="search"]'
           );
-        if (searchInput) {
+        if (searchInput && searchInput instanceof HTMLInputElement) {
           searchInput.focus();
           searchInput.select();
         }
       }, 200);
     } else {
       // Already on explore page, just focus search
-      const searchInput = document.getElementById('search-input') || 
+      const searchInput = document.getElementById('search-input') as HTMLInputElement | null || 
         document.querySelector<HTMLInputElement>(
           'input[type="text"][placeholder*="Search" i], input[type="search"]'
         );
-      if (searchInput) {
+      if (searchInput && searchInput instanceof HTMLInputElement) {
         searchInput.focus();
         searchInput.select();
       }

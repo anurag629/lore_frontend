@@ -4,7 +4,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { favoritesAPI } from '@/lib/api';
 import { useToast } from '@/components/ui/Toast';
-import type { IPAsset } from '@/lib/types';
+import type { IPAssetListItem } from '@/types/api';
 
 export interface Favorite {
   id: number;
@@ -14,7 +14,7 @@ export interface Favorite {
     display_name: string;
     avatar_url: string;
   };
-  asset: IPAsset;
+  asset: IPAssetListItem;
   created_at: string;
 }
 

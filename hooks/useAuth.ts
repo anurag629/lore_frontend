@@ -14,9 +14,11 @@ export interface User {
   email: string;
   bio: string;
   avatar_url: string;
+  banner_url?: string;
   total_earnings: string;
   assets_count: number;
   total_spinoffs: number;
+  is_staff?: boolean;
   created_at: string;
   updated_at: string;
 }
