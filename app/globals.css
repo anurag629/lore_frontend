@@ -93,6 +93,11 @@ body {
   color: white;
 }
 
+/* Safe Area Insets for Mobile */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+}
+
 /* Custom Scrollbar for Activity Feed */
 .scrollbar-thin {
   scrollbar-width: thin;

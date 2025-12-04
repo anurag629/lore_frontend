@@ -138,8 +138,8 @@ export default function Sidebar() {
       </div>
 
       {/* Mobile Bottom Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 p-4">
-        <div className="glass rounded-2xl p-2 flex items-center justify-around shadow-2xl shadow-black/50 border border-white/10 bg-slate-950/90 backdrop-blur-xl">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-2 pb-2 pt-1 safe-area-inset-bottom">
+        <div className="glass rounded-2xl px-1 py-1.5 flex items-center justify-between gap-0.5 shadow-2xl shadow-black/50 border border-white/10 bg-slate-950/90 backdrop-blur-xl w-full overflow-hidden">
           {navItems.map((item) => {
             const Icon = item.icon;
             // Special handling for Profile route - match /profile and /profile/[address]
@@ -152,7 +152,7 @@ export default function Sidebar() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group",
+                  "flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 rounded-lg transition-all duration-300 relative group flex-1 min-w-0 max-w-[20%]",
                   isActive 
                     ? "text-amber-400" 
                     : "text-slate-400 hover:text-white"
@@ -161,25 +161,25 @@ export default function Sidebar() {
                 {isActive && (
                   <motion.div
                     layoutId="activeNav"
-                    className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-orange-600/20 border border-amber-500/20 rounded-xl"
+                    className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-orange-600/20 border border-amber-500/20 rounded-lg"
                     initial={false}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
-                <Icon className={cn("w-5 h-5 relative z-10 transition-colors", isActive ? "text-amber-400" : "group-hover:text-amber-400")} />
-                <span className="font-medium relative z-10">{item.name}</span>
+                <Icon className={cn("w-4 h-4 sm:w-5 sm:h-5 relative z-10 transition-colors flex-shrink-0", isActive ? "text-amber-400" : "group-hover:text-amber-400")} />
+                <span className="text-[9px] sm:text-[10px] font-medium relative z-10 truncate w-full text-center leading-tight px-0.5">{item.name}</span>
               </Link>
             );
           })}
           
           <button
             onClick={handleOpenMintModal}
-            className="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-white"
+            className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-slate-400 hover:text-white flex-shrink-0 max-w-[20%]"
           >
-            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-500/20">
-              <Plus className="w-5 h-5" />
+            <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-500/20">
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <span className="text-[10px] font-medium">Mint</span>
+            <span className="text-[9px] sm:text-[10px] font-medium leading-tight">Mint</span>
           </button>
         </div>
       </div>
