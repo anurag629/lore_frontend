@@ -326,6 +326,18 @@ export const assetsAPI = {
     const response = await api.delete(`/api/assets/assets/${id}/`);
     return response.data;
   },
+
+  // Retry asset creation (resume from failed step)
+  retryCreation: async (id: string) => {
+    const response = await api.post(`/api/assets/assets/${id}/retry_creation/`);
+    return response.data;
+  },
+
+  // Retry Story Protocol registration (legacy endpoint)
+  retryRegistration: async (id: string) => {
+    const response = await api.post(`/api/assets/assets/${id}/retry_registration/`);
+    return response.data;
+  },
 };
 
 // Collections API endpoints

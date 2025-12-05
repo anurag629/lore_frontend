@@ -490,3 +490,34 @@ export function useDeleteAsset() {
     clearError,
   };
 }
+
+// Hook to retry asset creation
+export function useRetryCreation() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const retryCreation = useCallback(async (id: string): Promise<IPAsset | null> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result: { asset: IPAsset; message?: string; resumed_from_step?: string } = await assetsAPI.retryCreation(id);
+      return result.asset || result as any;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || err.response?.data?.error || 'Failed to retry asset creation';
+      setError(errorMessage);
+      console.error('Error retrying asset creation:', err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const clearError = useCallback(() => setError(null), []);
+
+  return {
+    retryCreation,
+    loading,
+    error,
+    clearError,
+  };
+}

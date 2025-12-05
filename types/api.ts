@@ -27,6 +27,14 @@ export interface Creator {
   avatar_url: string;
 }
 
+export type CreationStep = 
+  | 'media_upload'
+  | 'db_save'
+  | 'metadata_upload'
+  | 'story_registration'
+  | 'license_attachment'
+  | 'completed';
+
 export interface IPAsset {
   id: string;  // UUID
   story_ip_id: string | null;
@@ -44,6 +52,30 @@ export interface IPAsset {
   derivatives?: IPAsset[];
   registration_status?: 'pending' | 'registered' | 'failed' | 'retrying';
   registration_error?: string;
+  registration_attempts?: number;
+  last_registration_attempt?: string;
+  creation_step?: CreationStep;
+  failed_at_step?: CreationStep;
+  step_data?: {
+    media_upload?: {
+      ipfs_hash?: string;
+      url?: string;
+    };
+    metadata_upload?: {
+      uri?: string;
+      hash?: string;
+      ipfs_hash?: string;
+    };
+    story_registration?: {
+      ip_id?: string;
+      transaction_hash?: string;
+      block_number?: number;
+    };
+    license_attachment?: {
+      attached?: boolean;
+      error?: string;
+    };
+  };
   created_at: string;
   updated_at: string;
 }
