@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Comment } from '@/lib/types';
-import { useCommentReplies, useDeleteComment, useLikeComment } from '@/hooks/useComments';
+import { useCommentReplies, useDeleteComment, useLikeComment, useCreateComment } from '@/hooks/useComments';
 import { useAuth } from '@/hooks/useAuth';
 // Simple date formatter
 const formatDistanceToNow = (date: Date): string => {
@@ -31,6 +31,7 @@ import {
   Heart,
   Reply,
   Loader2,
+  Send,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -47,10 +48,13 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
   const [showReplies, setShowReplies] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isReplying, setIsReplying] = useState(false);
+  const [replyContent, setReplyContent] = useState('');
   
   const { data: replies, isLoading: repliesLoading } = useCommentReplies(comment.id);
   const deleteComment = useDeleteComment();
   const likeComment = useLikeComment();
+  const createComment = useCreateComment();
 
   const isOwner = isAuthenticated && user?.id === comment.user.id;
   const hasReplies = comment.reply_count > 0;
@@ -69,6 +73,24 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
   const handleLike = async () => {
     if (!isAuthenticated) return;
     await likeComment.mutateAsync(comment.id);
+  };
+
+  const handleSubmitReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!replyContent.trim()) return;
+
+    try {
+      await createComment.mutateAsync({
+        asset: assetId,
+        parent: comment.id,
+        content: replyContent.trim(),
+      });
+      setReplyContent('');
+      setIsReplying(false);
+      setShowReplies(true); // Auto-show replies after posting
+    } catch (error) {
+      // Error handling is done in the mutation
+    }
   };
 
   return (
@@ -147,17 +169,23 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
           <button
             onClick={handleLike}
             disabled={!isAuthenticated || likeComment.isPending}
-            className="flex items-center gap-2 text-slate-400 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              comment.is_liked ? 'text-red-500 hover:text-red-600' : 'text-slate-400 hover:text-red-400'
+            }`}
           >
-            <Heart className="w-4 h-4" />
-            <span className="text-sm">Like</span>
+            <Heart className={`w-4 h-4 ${comment.is_liked ? 'fill-current' : ''}`} />
+            <span className="text-sm">
+              {comment.like_count > 0 ? comment.like_count : 'Like'}
+            </span>
           </button>
 
           {/* Reply Button */}
-          {onReply && (
+          {isAuthenticated && (
             <button
-              onClick={() => onReply(comment.id)}
-              className="flex items-center gap-2 text-slate-400 hover:text-amber-400 transition-colors"
+              onClick={() => setIsReplying(!isReplying)}
+              className={`flex items-center gap-2 transition-colors ${
+                isReplying ? 'text-amber-400' : 'text-slate-400 hover:text-amber-400'
+              }`}
             >
               <Reply className="w-4 h-4" />
               <span className="text-sm">Reply</span>
@@ -177,6 +205,54 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
             </button>
           )}
         </div>
+
+        {/* Reply Form (Inside Card) */}
+        {isReplying && (
+          <div className="mt-4 pt-4 border-t border-slate-800">
+            <form onSubmit={handleSubmitReply} className="space-y-3">
+              <textarea
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                placeholder={`Replying to ${comment.user.display_name || '...'}...`}
+                rows={3}
+                autoFocus
+                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-50 placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none"
+              />
+              <div className="flex items-center justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsReplying(false);
+                    setReplyContent('');
+                  }}
+                  disabled={createComment.isPending}
+                  size="sm"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={!replyContent.trim() || createComment.isPending}
+                  size="sm"
+                >
+                  {createComment.isPending ? (
+                    <>
+                      <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                      Posting...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3 h-3 mr-2" />
+                      Reply
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* Replies Section */}
         {showReplies && (

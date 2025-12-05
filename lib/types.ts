@@ -173,6 +173,8 @@ export interface Comment {
   reply_count: number;
   is_deleted: boolean;
   is_own_comment: boolean;
+  is_liked: boolean;
+  like_count: number;
   created_at: string;
   updated_at: string;
 }

@@ -5,7 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Comment, CommentCreate, CommentUpdate } from '@/lib/types';
+import { Comment, CommentCreate, CommentUpdate, PaginatedResponse } from '@/lib/types';
 import { useToast } from '@/components/ui/Toast';
 
 /**
@@ -20,13 +20,11 @@ export function useComments(assetId: string | null, parentId?: string | null) {
       const params = new URLSearchParams({ asset: assetId });
       if (parentId) {
         params.append('parent', parentId);
-      } else {
-        // Only top-level comments
-        params.append('parent', '');
       }
+      // If no parentId, backend defaults to top-level comments (parent__isnull=True)
       
-      const response = await api.get<Comment[]>(`/api/social/comments/?${params.toString()}`);
-      return response.data;
+      const response = await api.get<PaginatedResponse<Comment>>(`/api/social/comments/?${params.toString()}`);
+      return response.data.results;
     },
     enabled: !!assetId,
   });

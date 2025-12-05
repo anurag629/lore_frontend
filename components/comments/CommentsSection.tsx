@@ -20,9 +20,8 @@ export default function CommentsSection({ assetId }: CommentsSectionProps) {
   const { showToast } = useToast();
   
   const [newComment, setNewComment] = useState('');
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);  // UUID
-  const [replyContent, setReplyContent] = useState('');
-
+  /* Removed global reply state */
+  
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -38,26 +37,9 @@ export default function CommentsSection({ assetId }: CommentsSectionProps) {
     }
   };
 
-  const handleSubmitReply = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!replyContent.trim() || !replyingTo) return;
+  /* Removed handleSubmitReply */
 
-    try {
-      await createComment.mutateAsync({
-        asset: assetId,
-        parent: replyingTo,
-        content: replyContent.trim(),
-      });
-      setReplyContent('');
-      setReplyingTo(null);
-    } catch (error) {
-      // Error handling is done in the mutation
-    }
-  };
-
-  const handleReply = (commentId: string) => {  // UUID
-    setReplyingTo(commentId);
-  };
+  /* Removed handleReply */
 
   return (
     <div className="mt-12">
@@ -123,54 +105,7 @@ export default function CommentsSection({ assetId }: CommentsSectionProps) {
         </div>
       )}
 
-      {/* Reply Form (when replying to a comment) */}
-      {replyingTo && isAuthenticated && (
-        <div className="bg-slate-900 rounded-xl border border-amber-800/50 p-4 mb-6">
-          <form onSubmit={handleSubmitReply} className="space-y-3">
-            <div className="flex items-center gap-2 mb-2">
-              <MessageSquare className="w-4 h-4 text-amber-400" />
-              <span className="text-sm text-amber-400">Replying to comment</span>
-            </div>
-            <textarea
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              placeholder="Write a reply..."
-              rows={3}
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-50 placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none"
-            />
-            <div className="flex items-center justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setReplyingTo(null);
-                  setReplyContent('');
-                }}
-                disabled={createComment.isPending}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={!replyContent.trim() || createComment.isPending}
-              >
-                {createComment.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Posting...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Post Reply
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </div>
-      )}
+      {/* Reply Form removed - now inside CommentCard */}
 
       {/* Comments List */}
       {isLoading ? (
@@ -184,7 +119,6 @@ export default function CommentsSection({ assetId }: CommentsSectionProps) {
               key={comment.id}
               comment={comment}
               assetId={assetId}
-              onReply={handleReply}
             />
           ))}
         </div>
