@@ -57,12 +57,17 @@ export function useCreateComment() {
       return response.data;
     },
     onSuccess: (data) => {
-      // Invalidate comments queries for the asset
-      queryClient.invalidateQueries({ queryKey: ['comments', data.asset] });
+      // Invalidate all comment queries for the asset (this will match any query starting with ['comments', assetId])
+      queryClient.invalidateQueries({ 
+        queryKey: ['comments', data.asset],
+        exact: false  // Match all queries that start with this key
+      });
       // Also invalidate parent comment's replies if it's a reply
       if (data.parent) {
         queryClient.invalidateQueries({ queryKey: ['comments', 'replies', data.parent] });
       }
+      // Invalidate all comment queries to ensure reply counts update
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
       showToast('Comment posted successfully!', 'success');
     },
     onError: (error: any) => {
@@ -133,9 +138,11 @@ export function useLikeComment() {
       const response = await api.post<{ liked: boolean }>(`/api/social/comments/${id}/like/`);
       return response.data;
     },
-    onSuccess: () => {
-      // Invalidate comments to refresh like status
+    onSuccess: (_, commentId) => {
+      // Invalidate all comment queries to refresh like status
       queryClient.invalidateQueries({ queryKey: ['comments'] });
+      // Also invalidate replies for this comment
+      queryClient.invalidateQueries({ queryKey: ['comments', 'replies', commentId] });
     },
   });
 }

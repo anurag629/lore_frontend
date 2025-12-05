@@ -51,7 +51,7 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
   const [isReplying, setIsReplying] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   
-  const { data: replies, isLoading: repliesLoading } = useCommentReplies(comment.id);
+  const { data: replies, isLoading: repliesLoading, refetch: refetchReplies } = useCommentReplies(comment.id);
   const deleteComment = useDeleteComment();
   const likeComment = useLikeComment();
   const createComment = useCreateComment();
@@ -88,6 +88,10 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
       setReplyContent('');
       setIsReplying(false);
       setShowReplies(true); // Auto-show replies after posting
+      // Refetch replies to show the new one immediately
+      setTimeout(() => {
+        refetchReplies();
+      }, 100);
     } catch (error) {
       // Error handling is done in the mutation
     }
