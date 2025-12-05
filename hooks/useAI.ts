@@ -74,7 +74,7 @@ export function useAnalyzeDerivative() {
   return useMutation<
     AIDerivativeResponse,
     Error,
-    { parent_asset_id: number; derivative_description: string; derivative_title?: string }
+    { parent_asset_id: string; derivative_description: string; derivative_title?: string }
   >({
     mutationFn: aiAPI.analyzeDerivative,
   });

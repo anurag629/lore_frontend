@@ -231,7 +231,7 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
                     setReplyContent('');
                   }}
                   disabled={createComment.isPending}
-                  size="sm"
+                  className="px-4 py-2 text-sm"
                 >
                   Cancel
                 </Button>
@@ -239,7 +239,7 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
                   type="submit"
                   variant="primary"
                   disabled={!replyContent.trim() || createComment.isPending}
-                  size="sm"
+                  className="px-4 py-2 text-sm"
                 >
                   {createComment.isPending ? (
                     <>

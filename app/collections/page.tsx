@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCollections } from '@/hooks/useCollections';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -23,7 +23,7 @@ import Button from '@/components/ui/Button';
 
 type TabType = 'my' | 'discover';
 
-export default function CollectionsPage() {
+function CollectionsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -246,5 +246,22 @@ export default function CollectionsPage() {
         }}
       />
     </div>
+  );
+}
+
+export default function CollectionsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
+            <p className="text-slate-400">Loading collections...</p>
+          </div>
+        </div>
+      }
+    >
+      <CollectionsContent />
+    </Suspense>
   );
 }
