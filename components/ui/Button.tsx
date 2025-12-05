@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
   className?: string;
 }
 
@@ -25,7 +25,8 @@ export default function Button({ children, variant = 'primary', className, ...pr
   const variants = {
     primary: "bg-amber-500 text-white hover:shadow-lg hover:shadow-amber-500/25",
     secondary: "bg-slate-900 text-white border border-slate-800 hover:border-amber-500/50 hover:bg-slate-800",
-    outline: "border border-slate-700 text-slate-300 hover:text-white hover:border-amber-500"
+    outline: "border border-slate-700 text-slate-300 hover:text-white hover:border-amber-500",
+    danger: "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 hover:border-red-500/50"
   };
 
   return (

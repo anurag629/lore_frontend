@@ -33,6 +33,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface CommentCardProps {
   comment: Comment;
@@ -45,6 +46,7 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
   const { user, isAuthenticated } = useAuth();
   const [showReplies, setShowReplies] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const { data: replies, isLoading: repliesLoading } = useCommentReplies(comment.id);
   const deleteComment = useDeleteComment();
@@ -59,10 +61,9 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
   };
 
   const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this comment?')) {
-      await deleteComment.mutateAsync(comment.id);
-      setShowActions(false);
-    }
+    await deleteComment.mutateAsync(comment.id);
+    setShowDeleteConfirm(false);
+    setShowActions(false);
   };
 
   const handleLike = async () => {
@@ -117,15 +118,13 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
                   />
                   <div className="absolute right-0 top-8 z-20 bg-slate-800 border border-slate-700 rounded-lg shadow-xl overflow-hidden min-w-[120px]">
                     <button
-                      onClick={handleDelete}
-                      disabled={deleteComment.isPending}
-                      className="w-full px-4 py-2 text-left text-red-400 hover:bg-slate-700 flex items-center gap-2 transition-colors disabled:opacity-50"
+                      onClick={() => {
+                        setShowActions(false);
+                        setShowDeleteConfirm(true);
+                      }}
+                      className="w-full px-4 py-2 text-left text-red-400 hover:bg-slate-700 flex items-center gap-2 transition-colors"
                     >
-                      {deleteComment.isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
+                      <Trash2 className="w-4 h-4" />
                       Delete
                     </button>
                   </div>
@@ -202,6 +201,18 @@ export default function CommentCard({ comment, assetId, onReply, level = 0 }: Co
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Delete Comment"
+        message="Are you sure you want to delete this comment? This action cannot be undone."
+        confirmText="Delete"
+        variant="danger"
+        loading={deleteComment.isPending}
+      />
     </div>
   );
 }

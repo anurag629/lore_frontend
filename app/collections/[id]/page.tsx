@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useCollection, useRemoveAssetFromCollection } from '@/hooks/useCollections';
+import { useCollection, useRemoveAssetFromCollection, useDeleteCollection } from '@/hooks/useCollections';
 import { useAuth } from '@/hooks/useAuth';
 import {
   ArrowLeft,
@@ -12,6 +12,8 @@ import {
   Globe,
   Lock,
   User,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -19,17 +21,35 @@ import Button from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import OptimizedImage from '@/components/ui/OptimizedImage';
 import { EmptyState } from '@/components/ui/EmptyState';
+import CollectionModal from '@/components/collections/CollectionModal';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function CollectionDetailPage() {
   const params = useParams();
   const router = useRouter();
   const collectionId = params?.id ? parseInt(params.id as string) : null;
-  const { data: collection, isLoading, error } = useCollection(collectionId || 0);
+  const { data: collection, isLoading, error, refetch } = useCollection(collectionId || 0);
   const { user, isAuthenticated } = useAuth();
   const { showToast } = useToast();
   const removeAsset = useRemoveAssetFromCollection();
+  const deleteCollection = useDeleteCollection();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [assetToRemove, setAssetToRemove] = useState<{ id: number; title: string } | null>(null);
 
   const isOwner = collection && user && collection.creator.id === user.id;
+
+  const handleDeleteCollection = async () => {
+    if (!collection) return;
+    
+    try {
+      await deleteCollection.mutateAsync(collection.id);
+      router.push('/collections');
+    } catch (error) {
+      // Error handled in hook
+    }
+    setShowDeleteConfirm(false);
+  };
 
   if (isLoading) {
     return (
@@ -60,19 +80,18 @@ export default function CollectionDetailPage() {
     );
   }
 
-  const handleRemoveAsset = async (assetId: number) => {
-    if (!isOwner) return;
+  const handleRemoveAsset = async () => {
+    if (!isOwner || !assetToRemove) return;
     
-    if (confirm('Remove this asset from the collection?')) {
-      try {
-        await removeAsset.mutateAsync({
-          collectionId: collection.id,
-          assetId,
-        });
-      } catch (error) {
-        // Error handled in hook
-      }
+    try {
+      await removeAsset.mutateAsync({
+        collectionId: collection.id,
+        assetId: assetToRemove.id,
+      });
+    } catch (error) {
+      // Error handled in hook
     }
+    setAssetToRemove(null);
   };
 
   return (
@@ -135,6 +154,26 @@ export default function CollectionDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Owner Actions */}
+        {isOwner && (
+          <div className="flex items-center gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setIsEditModalOpen(true)}
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Assets Grid */}
@@ -173,7 +212,8 @@ export default function CollectionDetailPage() {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
-                    handleRemoveAsset(asset.id);
+                    e.stopPropagation();
+                    setAssetToRemove({ id: asset.id, title: asset.title });
                   }}
                   className="absolute top-2 right-2 p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                   disabled={removeAsset.isPending}
@@ -191,6 +231,43 @@ export default function CollectionDetailPage() {
           description="This collection is empty. Add assets to get started!"
         />
       )}
+
+      {/* Edit Collection Modal */}
+      {isOwner && (
+        <CollectionModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSuccess={() => {
+            setIsEditModalOpen(false);
+            refetch();
+          }}
+          collection={collection}
+        />
+      )}
+
+      {/* Delete Collection Confirmation */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteCollection}
+        title="Delete Collection"
+        message={`Are you sure you want to delete "${collection.title}"? This action cannot be undone, but the assets inside will not be affected.`}
+        confirmText="Delete Collection"
+        variant="danger"
+        loading={deleteCollection.isPending}
+      />
+
+      {/* Remove Asset Confirmation */}
+      <ConfirmModal
+        isOpen={!!assetToRemove}
+        onClose={() => setAssetToRemove(null)}
+        onConfirm={handleRemoveAsset}
+        title="Remove Asset"
+        message={`Remove "${assetToRemove?.title || 'this asset'}" from the collection? The asset will not be deleted, just removed from this collection.`}
+        confirmText="Remove"
+        variant="warning"
+        loading={removeAsset.isPending}
+      />
     </div>
   );
 }
