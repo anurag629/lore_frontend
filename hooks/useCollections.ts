@@ -64,6 +64,7 @@ export function useCreateCollection() {
       title: string;
       description?: string;
       cover_image_url?: string;
+      cover_image?: File;  // File upload for cover image
       is_public?: boolean;
       asset_ids?: string[];  // UUIDs
     }) => collectionsAPI.createCollection(data),

@@ -350,9 +350,26 @@ export const collectionsAPI = {
     title: string;
     description?: string;
     cover_image_url?: string;
+    cover_image?: File;
     is_public?: boolean;
     asset_ids?: string[];  // UUIDs
   }) => {
+    // Use FormData if there's a file to upload
+    if (data.cover_image) {
+      const formData = new FormData();
+      formData.append('title', data.title);
+      if (data.description) formData.append('description', data.description);
+      formData.append('cover_image', data.cover_image);
+      if (data.is_public !== undefined) formData.append('is_public', String(data.is_public));
+      if (data.asset_ids) {
+        data.asset_ids.forEach(id => formData.append('asset_ids', id));
+      }
+      const response = await api.post('/api/collections/collections/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    }
+    // Otherwise use JSON
     const response = await api.post('/api/collections/collections/', data);
     return response.data;
   },
@@ -362,9 +379,26 @@ export const collectionsAPI = {
     title?: string;
     description?: string;
     cover_image_url?: string;
+    cover_image?: File;
     is_public?: boolean;
     asset_ids?: string[];  // UUIDs
   }) => {
+    // Use FormData if there's a file to upload
+    if (data.cover_image) {
+      const formData = new FormData();
+      if (data.title) formData.append('title', data.title);
+      if (data.description !== undefined) formData.append('description', data.description);
+      formData.append('cover_image', data.cover_image);
+      if (data.is_public !== undefined) formData.append('is_public', String(data.is_public));
+      if (data.asset_ids) {
+        data.asset_ids.forEach(id => formData.append('asset_ids', id));
+      }
+      const response = await api.patch(`/api/collections/collections/${id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    }
+    // Otherwise use JSON
     const response = await api.patch(`/api/collections/collections/${id}/`, data);
     return response.data;
   },
