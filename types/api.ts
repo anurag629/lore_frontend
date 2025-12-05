@@ -1,9 +1,10 @@
 /**
  * TypeScript types for API responses
+ * Note: IDs are UUIDs (strings) for all entities except User (which uses wallet_address)
  */
 
 export interface User {
-  id: number;
+  id: number;  // Internal ID - frontend uses wallet_address for identification
   wallet_address: string;
   username: string;
   email: string;
@@ -20,14 +21,14 @@ export interface User {
 }
 
 export interface Creator {
-  id: number;
+  id: number;  // Internal ID
   wallet_address: string;
   display_name: string;
   avatar_url: string;
 }
 
 export interface IPAsset {
-  id: number;
+  id: string;  // UUID
   story_ip_id: string | null;
   creator: Creator;
   title: string;
@@ -48,7 +49,7 @@ export interface IPAsset {
 }
 
 export interface IPAssetListItem {
-  id: number;
+  id: string;  // UUID
   story_ip_id: string | null;
   creator: Creator;
   title: string;
@@ -81,7 +82,7 @@ export interface CreateIPAssetData {
 }
 
 export interface CreateDerivativeData {
-  parent_asset_id: number;
+  parent_asset_id: string;  // UUID
   title: string;
   description: string;
   media_file?: File;
@@ -90,7 +91,7 @@ export interface CreateDerivativeData {
 }
 
 export interface RoyaltyPayment {
-  id: number;
+  id: string;  // UUID
   asset: IPAssetListItem;
   recipient: Creator;
   amount: string;
@@ -101,7 +102,7 @@ export interface RoyaltyPayment {
 
 export interface RoyaltyBalance {
   balance: string;
-  asset_id: number;
+  asset_id: string;  // UUID
   story_ip_id: string;
 }
 

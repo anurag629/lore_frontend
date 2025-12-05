@@ -1,10 +1,11 @@
 /**
  * Lore TypeScript Type Definitions
+ * Note: IDs are UUIDs (strings) for entities. User uses wallet_address for public identification.
  */
 
 // User Types
 export interface LoreUser {
-  id: number;
+  id: number;  // Internal ID
   wallet_address: string;
   username: string;
   bio: string;
@@ -15,7 +16,7 @@ export interface LoreUser {
 
 // IP Asset Types
 export interface IPAsset {
-  id: number;
+  id: string;  // UUID
   story_ip_id: string | null;
   creator: LoreUser;
   title: string;
@@ -23,7 +24,7 @@ export interface IPAsset {
   media_url: string;
   metadata_hash: string;
   is_derivative: boolean;
-  parent_asset: number | null;
+  parent_asset: string | null;  // UUID
   royalty_percentage: number;
   allow_derivatives: boolean;
   commercial_rights: boolean;
@@ -34,9 +35,9 @@ export interface IPAsset {
 export type InteractionType = 'like' | 'spinoff' | 'view';
 
 export interface Interaction {
-  id: number;
+  id: string;  // UUID
   user: number;
-  asset: number;
+  asset: string;  // UUID
   type: InteractionType;
   created_at: string;
 }
@@ -60,8 +61,8 @@ export interface AssetPerformance {
 
 // Royalty Types
 export interface RoyaltyPayment {
-  id: number;
-  asset: number;
+  id: string;  // UUID
+  asset: string;  // UUID
   recipient: number;
   amount: string;
   transaction_hash: string;
@@ -159,15 +160,15 @@ export interface AIPlatformStats extends AIUsageStats {
 
 // Comment Types
 export interface Comment {
-  id: number;
-  asset: number;
+  id: string;  // UUID
+  asset: string;  // UUID
   user: {
     id: number;
     wallet_address: string;
     display_name: string;
     avatar_url: string;
   };
-  parent: number | null;
+  parent: string | null;  // UUID
   content: string;
   reply_count: number;
   is_deleted: boolean;
@@ -177,11 +178,63 @@ export interface Comment {
 }
 
 export interface CommentCreate {
-  asset: number;
-  parent?: number | null;
+  asset: string;  // UUID
+  parent?: string | null;  // UUID
   content: string;
 }
 
 export interface CommentUpdate {
   content: string;
+}
+
+// Collection Types
+export interface Collection {
+  id: string;  // UUID
+  title: string;
+  description: string;
+  creator: {
+    id: number;
+    wallet_address: string;
+    display_name: string;
+    avatar_url: string;
+  };
+  cover_image_url: string | null;
+  is_public: boolean;
+  asset_count: number;
+  assets?: IPAsset[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CollectionCreate {
+  title: string;
+  description?: string;
+  cover_image_url?: string;
+  is_public?: boolean;
+  asset_ids?: string[];  // UUIDs
+}
+
+export interface CollectionUpdate {
+  title?: string;
+  description?: string;
+  cover_image_url?: string;
+  is_public?: boolean;
+  asset_ids?: string[];  // UUIDs
+}
+
+// Favorite Types
+export interface Favorite {
+  id: string;  // UUID
+  user: {
+    id: number;
+    wallet_address: string;
+    display_name: string;
+    avatar_url: string;
+  };
+  asset: IPAsset;
+  created_at: string;
+}
+
+export interface FavoriteCreate {
+  asset_id: string;  // UUID
 }

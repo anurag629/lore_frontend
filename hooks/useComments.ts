@@ -11,15 +11,15 @@ import { useToast } from '@/components/ui/Toast';
 /**
  * Fetch comments for an asset
  */
-export function useComments(assetId: number | null, parentId?: number | null) {
+export function useComments(assetId: string | null, parentId?: string | null) {
   return useQuery({
     queryKey: ['comments', assetId, parentId],
     queryFn: async () => {
       if (!assetId) return [];
       
-      const params = new URLSearchParams({ asset: assetId.toString() });
+      const params = new URLSearchParams({ asset: assetId });
       if (parentId) {
-        params.append('parent', parentId.toString());
+        params.append('parent', parentId);
       } else {
         // Only top-level comments
         params.append('parent', '');
@@ -35,7 +35,7 @@ export function useComments(assetId: number | null, parentId?: number | null) {
 /**
  * Fetch replies to a specific comment
  */
-export function useCommentReplies(commentId: number) {
+export function useCommentReplies(commentId: string) {
   return useQuery({
     queryKey: ['comments', 'replies', commentId],
     queryFn: async () => {
@@ -82,7 +82,7 @@ export function useUpdateComment() {
   const { showToast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: CommentUpdate }) => {
+    mutationFn: async ({ id, data }: { id: string; data: CommentUpdate }) => {
       const response = await api.patch<Comment>(`/api/social/comments/${id}/`, data);
       return response.data;
     },
@@ -109,7 +109,7 @@ export function useDeleteComment() {
   const { showToast } = useToast();
 
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await api.delete(`/api/social/comments/${id}/`);
     },
     onSuccess: (_, id) => {
@@ -131,7 +131,7 @@ export function useLikeComment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       const response = await api.post<{ liked: boolean }>(`/api/social/comments/${id}/like/`);
       return response.data;
     },
@@ -141,4 +141,3 @@ export function useLikeComment() {
     },
   });
 }
-

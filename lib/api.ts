@@ -263,8 +263,8 @@ export const assetsAPI = {
     return response.data;
   },
 
-  // Get single IP asset by ID
-  getAsset: async (id: number) => {
+  // Get single IP asset by UUID
+  getAsset: async (id: string) => {
     const response = await api.get(`/api/assets/assets/${id}/`);
     return response.data;
   },
@@ -290,19 +290,19 @@ export const assetsAPI = {
   },
 
   // Get derivatives of an asset
-  getDerivatives: async (id: number) => {
+  getDerivatives: async (id: string) => {
     const response = await api.get(`/api/assets/assets/${id}/derivatives/`);
     return response.data;
   },
 
   // Claim royalties for an asset
-  claimRoyalties: async (id: number) => {
+  claimRoyalties: async (id: string) => {
     const response = await api.post(`/api/assets/assets/${id}/claim_royalties/`);
     return response.data;
   },
 
   // Get royalty balance for an asset
-  getRoyaltyBalance: async (id: number) => {
+  getRoyaltyBalance: async (id: string) => {
     const response = await api.get(`/api/assets/assets/${id}/royalty_balance/`);
     return response.data;
   },
@@ -316,13 +316,13 @@ export const assetsAPI = {
   },
 
   // Update asset (only title and description)
-  updateAsset: async (id: number, data: { title: string; description: string }) => {
+  updateAsset: async (id: string, data: { title: string; description: string }) => {
     const response = await api.patch(`/api/assets/assets/${id}/`, data);
     return response.data;
   },
 
   // Delete asset (soft delete)
-  deleteAsset: async (id: number) => {
+  deleteAsset: async (id: string) => {
     const response = await api.delete(`/api/assets/assets/${id}/`);
     return response.data;
   },
@@ -339,8 +339,8 @@ export const collectionsAPI = {
     return response.data;
   },
 
-  // Get single collection by ID
-  getCollection: async (id: number) => {
+  // Get single collection by UUID
+  getCollection: async (id: string) => {
     const response = await api.get(`/api/collections/collections/${id}/`);
     return response.data;
   },
@@ -351,32 +351,32 @@ export const collectionsAPI = {
     description?: string;
     cover_image_url?: string;
     is_public?: boolean;
-    asset_ids?: number[];
+    asset_ids?: string[];  // UUIDs
   }) => {
     const response = await api.post('/api/collections/collections/', data);
     return response.data;
   },
 
   // Update collection
-  updateCollection: async (id: number, data: {
+  updateCollection: async (id: string, data: {
     title?: string;
     description?: string;
     cover_image_url?: string;
     is_public?: boolean;
-    asset_ids?: number[];
+    asset_ids?: string[];  // UUIDs
   }) => {
     const response = await api.patch(`/api/collections/collections/${id}/`, data);
     return response.data;
   },
 
   // Delete collection
-  deleteCollection: async (id: number) => {
+  deleteCollection: async (id: string) => {
     const response = await api.delete(`/api/collections/collections/${id}/`);
     return response.data;
   },
 
   // Add asset to collection
-  addAssetToCollection: async (collectionId: number, assetId: number) => {
+  addAssetToCollection: async (collectionId: string, assetId: string) => {
     const response = await api.post(`/api/collections/collections/${collectionId}/add_asset/`, {
       asset_id: assetId,
     });
@@ -384,7 +384,7 @@ export const collectionsAPI = {
   },
 
   // Remove asset from collection
-  removeAssetFromCollection: async (collectionId: number, assetId: number) => {
+  removeAssetFromCollection: async (collectionId: string, assetId: string) => {
     const response = await api.post(`/api/collections/collections/${collectionId}/remove_asset/`, {
       asset_id: assetId,
     });
@@ -402,7 +402,7 @@ export const favoritesAPI = {
   },
 
   // Toggle favorite status
-  toggleFavorite: async (assetId: number) => {
+  toggleFavorite: async (assetId: string) => {  // UUID
     const response = await api.post('/api/collections/favorites/toggle/', {
       asset_id: assetId,
     });
@@ -410,7 +410,7 @@ export const favoritesAPI = {
   },
 
   // Check if asset is favorited
-  checkFavorite: async (assetId: number) => {
+  checkFavorite: async (assetId: string) => {  // UUID
     const response = await api.get('/api/collections/favorites/check/', {
       params: { asset_id: assetId },
     });
@@ -418,7 +418,7 @@ export const favoritesAPI = {
   },
 
   // Remove favorite
-  removeFavorite: async (favoriteId: number) => {
+  removeFavorite: async (favoriteId: string) => {  // UUID
     const response = await api.delete(`/api/collections/favorites/${favoriteId}/`);
     return response.data;
   },
@@ -464,7 +464,7 @@ export const aiAPI = {
 
   // Analyze parent-derivative relationship
   analyzeDerivative: async (data: {
-    parent_asset_id: number;
+    parent_asset_id: string;  // UUID
     derivative_description: string;
     derivative_title?: string;
   }) => {

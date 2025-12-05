@@ -37,8 +37,8 @@ export default function AssetDetailPage() {
   const params = useParams();
   const router = useRouter();
   
-  // Parse assetId directly - params.id is stable from Next.js
-  const assetId = params?.id ? parseInt(params.id as string, 10) : null;
+  // Use UUID directly - params.id is already a string UUID
+  const assetId = params?.id ? (params.id as string) : null;
   
   const { asset, loading, error, refetch } = useAsset(assetId);
   const { user, isAuthenticated } = useAuth();

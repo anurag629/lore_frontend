@@ -37,8 +37,8 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface CommentCardProps {
   comment: Comment;
-  assetId: number;
-  onReply?: (commentId: number) => void;
+  assetId: string;  // UUID
+  onReply?: (commentId: string) => void;  // UUID
   level?: number;
 }
 

@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 interface CommentsSectionProps {
-  assetId: number;
+  assetId: string;  // UUID
 }
 
 export default function CommentsSection({ assetId }: CommentsSectionProps) {
@@ -20,7 +20,7 @@ export default function CommentsSection({ assetId }: CommentsSectionProps) {
   const { showToast } = useToast();
   
   const [newComment, setNewComment] = useState('');
-  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);  // UUID
   const [replyContent, setReplyContent] = useState('');
 
   const handleSubmitComment = async (e: React.FormEvent) => {
@@ -55,7 +55,7 @@ export default function CommentsSection({ assetId }: CommentsSectionProps) {
     }
   };
 
-  const handleReply = (commentId: number) => {
+  const handleReply = (commentId: string) => {  // UUID
     setReplyingTo(commentId);
   };
 

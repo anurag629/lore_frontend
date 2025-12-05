@@ -6,7 +6,7 @@ import { collectionsAPI } from '@/lib/api';
 import { useToast } from '@/components/ui/Toast';
 
 export interface Collection {
-  id: number;
+  id: string;  // UUID
   title: string;
   description: string;
   creator: {
@@ -43,7 +43,7 @@ export function useCollections(params?: { creator?: number; is_public?: boolean 
 /**
  * Hook to fetch a single collection
  */
-export function useCollection(id: number) {
+export function useCollection(id: string) {
   return useQuery<CollectionDetail>({
     queryKey: ['collection', id],
     queryFn: () => collectionsAPI.getCollection(id),
@@ -65,7 +65,7 @@ export function useCreateCollection() {
       description?: string;
       cover_image_url?: string;
       is_public?: boolean;
-      asset_ids?: number[];
+      asset_ids?: string[];  // UUIDs
     }) => collectionsAPI.createCollection(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['collections'] });
@@ -88,7 +88,7 @@ export function useUpdateCollection() {
   const { showToast } = useToast();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
       collectionsAPI.updateCollection(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['collections'] });
@@ -112,7 +112,7 @@ export function useDeleteCollection() {
   const { showToast } = useToast();
 
   return useMutation({
-    mutationFn: (id: number) => collectionsAPI.deleteCollection(id),
+    mutationFn: (id: string) => collectionsAPI.deleteCollection(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['collections'] });
       showToast('Collection deleted successfully!', 'success');
@@ -134,7 +134,7 @@ export function useAddAssetToCollection() {
   const { showToast } = useToast();
 
   return useMutation({
-    mutationFn: ({ collectionId, assetId }: { collectionId: number; assetId: number }) =>
+    mutationFn: ({ collectionId, assetId }: { collectionId: string; assetId: string }) =>
       collectionsAPI.addAssetToCollection(collectionId, assetId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['collection', variables.collectionId] });
@@ -158,7 +158,7 @@ export function useRemoveAssetFromCollection() {
   const { showToast } = useToast();
 
   return useMutation({
-    mutationFn: ({ collectionId, assetId }: { collectionId: number; assetId: number }) =>
+    mutationFn: ({ collectionId, assetId }: { collectionId: string; assetId: string }) =>
       collectionsAPI.removeAssetFromCollection(collectionId, assetId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['collection', variables.collectionId] });
@@ -173,4 +173,3 @@ export function useRemoveAssetFromCollection() {
     },
   });
 }
-

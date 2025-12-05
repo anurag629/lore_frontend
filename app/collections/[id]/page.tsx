@@ -27,15 +27,16 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 export default function CollectionDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const collectionId = params?.id ? parseInt(params.id as string) : null;
-  const { data: collection, isLoading, error, refetch } = useCollection(collectionId || 0);
+  // Use UUID directly - params.id is already a string UUID
+  const collectionId = params?.id ? (params.id as string) : null;
+  const { data: collection, isLoading, error, refetch } = useCollection(collectionId || '');
   const { user, isAuthenticated } = useAuth();
   const { showToast } = useToast();
   const removeAsset = useRemoveAssetFromCollection();
   const deleteCollection = useDeleteCollection();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [assetToRemove, setAssetToRemove] = useState<{ id: number; title: string } | null>(null);
+  const [assetToRemove, setAssetToRemove] = useState<{ id: string; title: string } | null>(null);
 
   const isOwner = collection && user && collection.creator.id === user.id;
 

@@ -7,7 +7,7 @@ import { useToast } from '@/components/ui/Toast';
 import type { IPAssetListItem } from '@/types/api';
 
 export interface Favorite {
-  id: number;
+  id: string;  // UUID
   user: {
     id: number;
     wallet_address: string;
@@ -35,7 +35,7 @@ export function useFavorites(userId?: number) {
 /**
  * Hook to check if an asset is favorited
  */
-export function useIsFavorited(assetId: number | null) {
+export function useIsFavorited(assetId: string | null) {
   return useQuery<{ favorited: boolean }>({
     queryKey: ['favorite-check', assetId],
     queryFn: () => favoritesAPI.checkFavorite(assetId!),
@@ -52,7 +52,7 @@ export function useToggleFavorite() {
   const { showToast } = useToast();
 
   return useMutation({
-    mutationFn: (assetId: number) => favoritesAPI.toggleFavorite(assetId),
+    mutationFn: (assetId: string) => favoritesAPI.toggleFavorite(assetId),
     onSuccess: (data, assetId) => {
       // Invalidate favorites list
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
@@ -83,7 +83,7 @@ export function useRemoveFavorite() {
   const { showToast } = useToast();
 
   return useMutation({
-    mutationFn: (favoriteId: number) => favoritesAPI.removeFavorite(favoriteId),
+    mutationFn: (favoriteId: string) => favoritesAPI.removeFavorite(favoriteId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
       showToast('Removed from favorites', 'success');
@@ -96,4 +96,3 @@ export function useRemoveFavorite() {
     },
   });
 }
-

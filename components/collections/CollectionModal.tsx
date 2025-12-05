@@ -13,7 +13,7 @@ interface CollectionModalProps {
   onClose: () => void;
   onSuccess?: () => void;
   collection?: Collection; // If provided, edit mode
-  preselectedAssetIds?: number[]; // Assets to pre-select
+  preselectedAssetIds?: string[]; // Asset UUIDs to pre-select
 }
 
 export default function CollectionModal({

@@ -151,7 +151,7 @@ export function useAssets(params?: {
 }
 
 // Hook to fetch single asset
-export function useAsset(id: number | null) {
+export function useAsset(id: string | null) {
   const [asset, setAsset] = useState<IPAsset | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -371,7 +371,7 @@ export function useClaimRoyalties() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const claimRoyalties = async (assetId: number): Promise<ClaimRoyaltiesResponse | null> => {
+  const claimRoyalties = async (assetId: string): Promise<ClaimRoyaltiesResponse | null> => {
     try {
       setLoading(true);
       setError(null);
@@ -396,7 +396,7 @@ export function useClaimRoyalties() {
 }
 
 // Hook to get royalty balance
-export function useRoyaltyBalance(assetId: number | null) {
+export function useRoyaltyBalance(assetId: string | null) {
   const [balance, setBalance] = useState<RoyaltyBalance | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -434,7 +434,7 @@ export function useUpdateAsset() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const updateAsset = useCallback(async (id: number, data: { title: string; description: string }): Promise<IPAsset | null> => {
+  const updateAsset = useCallback(async (id: string, data: { title: string; description: string }): Promise<IPAsset | null> => {
     try {
       setLoading(true);
       setError(null);
@@ -465,7 +465,7 @@ export function useDeleteAsset() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const deleteAsset = useCallback(async (id: number): Promise<boolean> => {
+  const deleteAsset = useCallback(async (id: string): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
