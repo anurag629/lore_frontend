@@ -10,8 +10,14 @@ import { useRouter } from 'next/navigation';
 export default function Dashboard() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  
+  // Get user ID safely
+  const userId = user?.id;
+  
+  // Fetch assets with creator filter - only fetches when userId is defined
+  // When userId is undefined, useAssets will still work but won't fetch (hasFetched will be false)
   const { assets, loading: assetsLoading, error, refetch } = useAssets(
-    user ? { creator: user.id } : undefined
+    userId !== undefined ? { creator: userId } : undefined
   );
 
   // Redirect to home if not authenticated
@@ -19,7 +25,7 @@ export default function Dashboard() {
     if (!authLoading && !isAuthenticated) {
       router.push('/');
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Format wallet address for display
   const formatAddress = (address: string) => {
@@ -204,13 +210,25 @@ export default function Dashboard() {
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-slate-50 mb-1 line-clamp-1">{asset.title}</div>
                         <div className="text-sm text-slate-400 font-mono text-xs">
-                          {formatAddress(asset.story_ip_id)}
+                          {asset.story_ip_id ? formatAddress(asset.story_ip_id) : 'Not registered'}
                         </div>
                       </div>
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                        Live
-                      </span>
+                      {asset.registration_status === 'failed' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                          Failed
+                        </span>
+                      ) : asset.registration_status === 'pending' || asset.registration_status === 'retrying' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                          {asset.registration_status === 'retrying' ? 'Retrying' : 'Pending'}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                          Live
+                        </span>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-3 text-sm mb-3">
                       <div>
@@ -274,16 +292,28 @@ export default function Dashboard() {
                             <div>
                               <div className="font-medium text-slate-50">{asset.title}</div>
                               <div className="text-sm text-slate-400 font-mono">
-                                {formatAddress(asset.story_ip_id)}
+                                {asset.story_ip_id ? formatAddress(asset.story_ip_id) : 'Not registered'}
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="p-4">
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                            Live
-                          </span>
+                          {asset.registration_status === 'failed' ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                              Failed
+                            </span>
+                          ) : asset.registration_status === 'pending' || asset.registration_status === 'retrying' ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                              {asset.registration_status === 'retrying' ? 'Retrying' : 'Pending'}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                              Live
+                            </span>
+                          )}
                         </td>
                         <td className="p-4">
                           <div className="flex flex-col gap-1">

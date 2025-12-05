@@ -28,7 +28,7 @@ export interface Creator {
 
 export interface IPAsset {
   id: number;
-  story_ip_id: string;
+  story_ip_id: string | null;
   creator: Creator;
   title: string;
   description: string;
@@ -41,13 +41,15 @@ export interface IPAsset {
   commercial_rights: boolean;
   derivative_count: number;
   derivatives?: IPAsset[];
+  registration_status?: 'pending' | 'registered' | 'failed' | 'retrying';
+  registration_error?: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface IPAssetListItem {
   id: number;
-  story_ip_id: string;
+  story_ip_id: string | null;
   creator: Creator;
   title: string;
   description: string;
@@ -56,6 +58,8 @@ export interface IPAssetListItem {
   derivative_count: number;
   allow_derivatives: boolean;
   commercial_rights: boolean;
+  registration_status?: 'pending' | 'registered' | 'failed' | 'retrying';
+  registration_error?: string;
   created_at: string;
 }
 

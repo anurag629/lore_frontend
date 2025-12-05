@@ -335,13 +335,13 @@ export const collectionsAPI = {
     creator?: number;
     is_public?: boolean;
   }) => {
-    const response = await api.get('/api/assets/collections/', { params });
+    const response = await api.get('/api/collections/collections/', { params });
     return response.data;
   },
 
   // Get single collection by ID
   getCollection: async (id: number) => {
-    const response = await api.get(`/api/assets/collections/${id}/`);
+    const response = await api.get(`/api/collections/collections/${id}/`);
     return response.data;
   },
 
@@ -353,7 +353,7 @@ export const collectionsAPI = {
     is_public?: boolean;
     asset_ids?: number[];
   }) => {
-    const response = await api.post('/api/assets/collections/', data);
+    const response = await api.post('/api/collections/collections/', data);
     return response.data;
   },
 
@@ -365,19 +365,19 @@ export const collectionsAPI = {
     is_public?: boolean;
     asset_ids?: number[];
   }) => {
-    const response = await api.patch(`/api/assets/collections/${id}/`, data);
+    const response = await api.patch(`/api/collections/collections/${id}/`, data);
     return response.data;
   },
 
   // Delete collection
   deleteCollection: async (id: number) => {
-    const response = await api.delete(`/api/assets/collections/${id}/`);
+    const response = await api.delete(`/api/collections/collections/${id}/`);
     return response.data;
   },
 
   // Add asset to collection
   addAssetToCollection: async (collectionId: number, assetId: number) => {
-    const response = await api.post(`/api/assets/collections/${collectionId}/add_asset/`, {
+    const response = await api.post(`/api/collections/collections/${collectionId}/add_asset/`, {
       asset_id: assetId,
     });
     return response.data;
@@ -385,7 +385,7 @@ export const collectionsAPI = {
 
   // Remove asset from collection
   removeAssetFromCollection: async (collectionId: number, assetId: number) => {
-    const response = await api.post(`/api/assets/collections/${collectionId}/remove_asset/`, {
+    const response = await api.post(`/api/collections/collections/${collectionId}/remove_asset/`, {
       asset_id: assetId,
     });
     return response.data;
@@ -397,13 +397,13 @@ export const favoritesAPI = {
   // Get user's favorites
   getFavorites: async (userId?: number) => {
     const params = userId ? { user: userId } : {};
-    const response = await api.get('/api/assets/favorites/', { params });
+    const response = await api.get('/api/collections/favorites/', { params });
     return response.data;
   },
 
   // Toggle favorite status
   toggleFavorite: async (assetId: number) => {
-    const response = await api.post('/api/assets/favorites/toggle/', {
+    const response = await api.post('/api/collections/favorites/toggle/', {
       asset_id: assetId,
     });
     return response.data;
@@ -411,7 +411,7 @@ export const favoritesAPI = {
 
   // Check if asset is favorited
   checkFavorite: async (assetId: number) => {
-    const response = await api.get('/api/assets/favorites/check/', {
+    const response = await api.get('/api/collections/favorites/check/', {
       params: { asset_id: assetId },
     });
     return response.data;
@@ -419,7 +419,7 @@ export const favoritesAPI = {
 
   // Remove favorite
   removeFavorite: async (favoriteId: number) => {
-    const response = await api.delete(`/api/assets/favorites/${favoriteId}/`);
+    const response = await api.delete(`/api/collections/favorites/${favoriteId}/`);
     return response.data;
   },
 };
@@ -428,7 +428,7 @@ export const favoritesAPI = {
 export const aiAPI = {
   // Generate title suggestions from description
   generateTitle: async (data: { description: string; asset_type?: string }) => {
-    const response = await api.post('/api/assets/ai/generate-title/', data);
+    const response = await api.post('/api/ai/generate-title/', data);
     return response.data;
   },
 
@@ -438,7 +438,7 @@ export const aiAPI = {
     title?: string;
     asset_type?: string;
   }) => {
-    const response = await api.post('/api/assets/ai/enhance-description/', data);
+    const response = await api.post('/api/ai/enhance-description/', data);
     return response.data;
   },
 
@@ -448,7 +448,7 @@ export const aiAPI = {
     description: string;
     media_url?: string;
   }) => {
-    const response = await api.post('/api/assets/ai/analyze-content/', data);
+    const response = await api.post('/api/ai/analyze-content/', data);
     return response.data;
   },
 
@@ -458,7 +458,7 @@ export const aiAPI = {
     description: string;
     intended_use?: string;
   }) => {
-    const response = await api.post('/api/assets/ai/suggest-license/', data);
+    const response = await api.post('/api/ai/suggest-license/', data);
     return response.data;
   },
 
@@ -468,13 +468,13 @@ export const aiAPI = {
     derivative_description: string;
     derivative_title?: string;
   }) => {
-    const response = await api.post('/api/assets/ai/analyze-derivative/', data);
+    const response = await api.post('/api/ai/analyze-derivative/', data);
     return response.data;
   },
 
   // Get user AI usage statistics
   getUsageStats: async (days = 30) => {
-    const response = await api.get('/api/assets/ai/usage-stats/', {
+    const response = await api.get('/api/ai/usage-stats/', {
       params: { days }
     });
     return response.data;
@@ -482,7 +482,7 @@ export const aiAPI = {
 
   // Get platform-wide AI statistics (admin only)
   getPlatformStats: async (days = 30) => {
-    const response = await api.get('/api/assets/ai/platform-stats/', {
+    const response = await api.get('/api/ai/platform-stats/', {
       params: { days }
     });
     return response.data;

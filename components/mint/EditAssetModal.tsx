@@ -35,10 +35,16 @@ export default function EditAssetModal({ isOpen, onClose, onSuccess, asset }: Ed
         title: asset.title || '',
         description: asset.description || '',
       });
-      clearError();
       setShowDeleteConfirm(false);
     }
-  }, [asset, clearError]);
+  }, [asset]);
+  
+  // Clear error when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      clearError();
+    }
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle AI Description Enhancement
   const handleEnhanceDescription = async () => {
@@ -316,4 +322,5 @@ export default function EditAssetModal({ isOpen, onClose, onSuccess, asset }: Ed
     </AnimatePresence>
   );
 }
+
 

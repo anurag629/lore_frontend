@@ -36,7 +36,10 @@ import CommentsSection from '@/components/comments/CommentsSection';
 export default function AssetDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const assetId = params?.id ? parseInt(params.id as string) : null;
+  
+  // Parse assetId directly - params.id is stable from Next.js
+  const assetId = params?.id ? parseInt(params.id as string, 10) : null;
+  
   const { asset, loading, error, refetch } = useAsset(assetId);
   const { user, isAuthenticated } = useAuth();
   const [showRemixModal, setShowRemixModal] = useState(false);
@@ -55,7 +58,7 @@ export default function AssetDetailPage() {
   const { claimRoyalties, loading: claiming, error: claimError } = useClaimRoyalties();
 
   // Format wallet address for display
-  const formatAddress = (address: string) => {
+  const formatAddress = (address: string | null | undefined) => {
     if (!address) return 'Unknown';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
@@ -98,6 +101,9 @@ export default function AssetDetailPage() {
 
   // Error state
   if (error || !asset) {
+    // Error is already a string from useAsset hook
+    const errorMessage = error || 'Asset not found';
+    
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full">
@@ -107,7 +113,7 @@ export default function AssetDetailPage() {
               <h3 className="text-lg font-semibold text-red-400">Error Loading Asset</h3>
             </div>
             <p className="text-red-300 text-sm mb-4">
-              {error || 'Asset not found'}
+              {errorMessage}
             </p>
             <div className="flex gap-3">
               <button
@@ -188,18 +194,29 @@ export default function AssetDetailPage() {
               {/* Story Protocol Badge */}
               <div className="p-4 border-t border-slate-800">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex-1">
                     <p className="text-xs text-slate-500 mb-1">Story Protocol IP ID</p>
-                    <p className="text-sm font-mono text-amber-400 font-semibold">
-                      {formatAddress(asset.story_ip_id)}
-                    </p>
+                    {asset.story_ip_id ? (
+                      <p className="text-sm font-mono text-amber-400 font-semibold">
+                        {formatAddress(asset.story_ip_id)}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-slate-400">
+                        Not registered
+                      </p>
+                    )}
+                    {asset.registration_status === 'failed' && asset.registration_error && (
+                      <p className="text-xs text-red-400 mt-1">{asset.registration_error || ''}</p>
+                    )}
                   </div>
-                  <button
-                    onClick={() => copy(asset.story_ip_id, 'IP ID')}
-                    className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-lg transition-colors"
-                  >
-                    Copy
-                  </button>
+                  {asset.story_ip_id && (
+                    <button
+                      onClick={() => copy(asset.story_ip_id!, 'IP ID')}
+                      className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-lg transition-colors"
+                    >
+                      Copy
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -470,13 +487,15 @@ export default function AssetDetailPage() {
                 </Button>
               )}
 
-              <button
-                onClick={() => window.open(`https://explorer.story.foundation/ipa/${asset.story_ip_id}`, '_blank')}
-                className="flex-1 sm:flex-none px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
-              >
-                View on Story
-                <ArrowLeft className="w-4 h-4 rotate-180" />
-              </button>
+              {asset.story_ip_id && (
+                <button
+                  onClick={() => window.open(`https://explorer.story.foundation/ipa/${asset.story_ip_id}`, '_blank')}
+                  className="flex-1 sm:flex-none px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                >
+                  View on Story
+                  <ArrowLeft className="w-4 h-4 rotate-180" />
+                </button>
+              )}
             </div>
           </div>
         </div>

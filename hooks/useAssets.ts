@@ -1,7 +1,7 @@
 /**
  * React hooks for IP Assets API
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { assetsAPI } from '@/lib/api';
 import type {
   IPAsset,
@@ -21,110 +21,261 @@ export function useAssets(params?: {
   page?: number;
 }) {
   const [assets, setAssets] = useState<IPAssetListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<{
     count: number;
     next: string | null;
     previous: string | null;
   } | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
 
-  const fetchAssets = useCallback(async () => {
+  // Use refs to track component mount state
+  const isMountedRef = useRef(true);
+  
+  // Create a stable key from params to detect changes
+  const paramsKey = JSON.stringify({
+    creator: params?.creator,
+    is_derivative: params?.is_derivative,
+    search: params?.search,
+    page: params?.page,
+  });
+
+  // Fetch on mount and when params change
+  useEffect(() => {
+    isMountedRef.current = true;
+    let isCancelled = false;
+    
+    const fetchAssets = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response: PaginatedResponse<IPAssetListItem> = await assetsAPI.getAssets(params);
+        
+        // Only update state if this fetch wasn't cancelled
+        if (!isCancelled && isMountedRef.current) {
+          setAssets(response.results || []);
+          setPagination({
+            count: response.count,
+            next: response.next,
+            previous: response.previous,
+          });
+          setHasFetched(true);
+        }
+      } catch (err: any) {
+        if (!isCancelled && isMountedRef.current) {
+          let errorMessage = 'Failed to fetch assets';
+          if (err.response?.data) {
+            if (typeof err.response.data === 'string') {
+              errorMessage = err.response.data;
+            } else if (err.response.data.detail) {
+              errorMessage = err.response.data.detail;
+            } else if (err.response.data.message) {
+              errorMessage = err.response.data.message;
+            } else if (err.response.data.error) {
+              errorMessage = err.response.data.error;
+            }
+          } else if (err.message) {
+            errorMessage = err.message;
+          }
+          setError(errorMessage);
+          console.error('Error fetching assets:', err);
+        }
+      } finally {
+        if (!isCancelled && isMountedRef.current) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchAssets();
+    
+    // Cleanup: cancel this fetch if params change or component unmounts
+    return () => {
+      isCancelled = true;
+      isMountedRef.current = false;
+    };
+  }, [paramsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Manual refetch function
+  const refetch = useCallback(async () => {
+    if (!isMountedRef.current) return;
+    
     try {
       setLoading(true);
       setError(null);
+      
       const response: PaginatedResponse<IPAssetListItem> = await assetsAPI.getAssets(params);
-      setAssets(response.results);
-      setPagination({
-        count: response.count,
-        next: response.next,
-        previous: response.previous,
-      });
-    } catch (err: any) {
-      // Extract error message safely
-      let errorMessage = 'Failed to fetch assets';
-      if (err.response?.data) {
-        if (typeof err.response.data === 'string') {
-          errorMessage = err.response.data;
-        } else if (err.response.data.detail) {
-          errorMessage = err.response.data.detail;
-        } else if (err.response.data.message) {
-          errorMessage = err.response.data.message;
-        } else if (err.response.data.error) {
-          errorMessage = err.response.data.error;
-        }
-      } else if (err.message) {
-        errorMessage = err.message;
+      
+      if (isMountedRef.current) {
+        setAssets(response.results || []);
+        setPagination({
+          count: response.count,
+          next: response.next,
+          previous: response.previous,
+        });
       }
-      setError(errorMessage);
-      console.error('Error fetching assets:', err);
+    } catch (err: any) {
+      if (isMountedRef.current) {
+        let errorMessage = 'Failed to fetch assets';
+        if (err.response?.data) {
+          if (typeof err.response.data === 'string') {
+            errorMessage = err.response.data;
+          } else if (err.response.data.detail) {
+            errorMessage = err.response.data.detail;
+          } else if (err.response.data.message) {
+            errorMessage = err.response.data.message;
+          } else if (err.response.data.error) {
+            errorMessage = err.response.data.error;
+          }
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+        setError(errorMessage);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  }, [params?.creator, params?.is_derivative, params?.search, params?.page]);
-
-  useEffect(() => {
-    fetchAssets();
-  }, [fetchAssets]);
+  }, [paramsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     assets,
-    loading,
+    loading: loading || (!hasFetched && !error),
     error,
     pagination,
-    refetch: fetchAssets,
+    refetch,
   };
 }
 
 // Hook to fetch single asset
 export function useAsset(id: number | null) {
   const [asset, setAsset] = useState<IPAsset | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
+  
+  const isMountedRef = useRef(true);
 
-  const fetchAsset = useCallback(async () => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
+  // Fetch on mount and when id changes
+  useEffect(() => {
+    isMountedRef.current = true;
+    let isCancelled = false;
+    
+    // Reset state when id changes
+    setAsset(null);
+    setError(null);
+    setHasFetched(false);
+    
+    const fetchAsset = async () => {
+      // If no id, mark as fetched with null asset
+      if (id === null) {
+        if (!isCancelled && isMountedRef.current) {
+          setHasFetched(true);
+        }
+        return;
+      }
 
+      try {
+        setLoading(true);
+        
+        const data: IPAsset = await assetsAPI.getAsset(id);
+        
+        // Only update state if this fetch wasn't cancelled
+        if (!isCancelled && isMountedRef.current) {
+          setAsset(data);
+          setHasFetched(true);
+        }
+      } catch (err: any) {
+        if (!isCancelled && isMountedRef.current) {
+          let errorMessage = 'Failed to fetch asset';
+          
+          if (err.response?.data) {
+            const data = err.response.data;
+            if (typeof data === 'string') {
+              errorMessage = data;
+            } else if (data.detail) {
+              errorMessage = typeof data.detail === 'string' ? data.detail : String(data.detail);
+            } else if (data.message) {
+              errorMessage = typeof data.message === 'string' ? data.message : String(data.message);
+            } else if (data.error) {
+              errorMessage = typeof data.error === 'string' ? data.error : String(data.error);
+            } else {
+              errorMessage = JSON.stringify(data);
+            }
+          } else if (err.message) {
+            errorMessage = typeof err.message === 'string' ? err.message : String(err.message);
+          }
+          
+          setError(errorMessage);
+          console.error('Error fetching asset:', err);
+        }
+      } finally {
+        if (!isCancelled && isMountedRef.current) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchAsset();
+    
+    // Cleanup: cancel this fetch if id changes or component unmounts
+    return () => {
+      isCancelled = true;
+      isMountedRef.current = false;
+    };
+  }, [id]);
+
+  // Manual refetch function
+  const refetch = useCallback(async () => {
+    if (id === null || !isMountedRef.current) return;
+    
     try {
       setLoading(true);
       setError(null);
+      
       const data: IPAsset = await assetsAPI.getAsset(id);
-      setAsset(data);
-    } catch (err: any) {
-      // Extract error message safely
-      let errorMessage = 'Failed to fetch asset';
-      if (err.response?.data) {
-        if (typeof err.response.data === 'string') {
-          errorMessage = err.response.data;
-        } else if (err.response.data.detail) {
-          errorMessage = err.response.data.detail;
-        } else if (err.response.data.message) {
-          errorMessage = err.response.data.message;
-        } else if (err.response.data.error) {
-          errorMessage = err.response.data.error;
-        }
-      } else if (err.message) {
-        errorMessage = err.message;
+      
+      if (isMountedRef.current) {
+        setAsset(data);
       }
-      setError(errorMessage);
-      console.error('Error fetching asset:', err);
+    } catch (err: any) {
+      if (isMountedRef.current) {
+        let errorMessage = 'Failed to fetch asset';
+        
+        if (err.response?.data) {
+          const data = err.response.data;
+          if (typeof data === 'string') {
+            errorMessage = data;
+          } else if (data.detail) {
+            errorMessage = typeof data.detail === 'string' ? data.detail : String(data.detail);
+          } else if (data.message) {
+            errorMessage = typeof data.message === 'string' ? data.message : String(data.message);
+          } else if (data.error) {
+            errorMessage = typeof data.error === 'string' ? data.error : String(data.error);
+          } else {
+            errorMessage = JSON.stringify(data);
+          }
+        } else if (err.message) {
+          errorMessage = typeof err.message === 'string' ? err.message : String(err.message);
+        }
+        
+        setError(errorMessage);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [id]);
 
-  useEffect(() => {
-    fetchAsset();
-  }, [fetchAsset]);
-
   return {
     asset,
-    loading,
+    loading: loading || (id !== null && !hasFetched && !error),
     error,
-    refetch: fetchAsset,
+    refetch,
   };
 }
 
@@ -283,7 +434,7 @@ export function useUpdateAsset() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const updateAsset = async (id: number, data: { title: string; description: string }): Promise<IPAsset | null> => {
+  const updateAsset = useCallback(async (id: number, data: { title: string; description: string }): Promise<IPAsset | null> => {
     try {
       setLoading(true);
       setError(null);
@@ -297,13 +448,15 @@ export function useUpdateAsset() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const clearError = useCallback(() => setError(null), []);
 
   return {
     updateAsset,
     loading,
     error,
-    clearError: () => setError(null),
+    clearError,
   };
 }
 
@@ -312,7 +465,7 @@ export function useDeleteAsset() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const deleteAsset = async (id: number): Promise<boolean> => {
+  const deleteAsset = useCallback(async (id: number): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
@@ -326,12 +479,14 @@ export function useDeleteAsset() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const clearError = useCallback(() => setError(null), []);
 
   return {
     deleteAsset,
     loading,
     error,
-    clearError: () => setError(null),
+    clearError,
   };
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCollections } from '@/hooks/useCollections';
 import { useRouter } from 'next/navigation';
@@ -23,10 +23,14 @@ export default function CollectionsPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Fetch user's collections
-  const { data: collections, isLoading, error } = useCollections(
-    user ? { creator: user.id } : undefined
+  // Memoize params to prevent unnecessary re-renders
+  const collectionsParams = useMemo(
+    () => (user ? { creator: user.id } : undefined),
+    [user?.id]
   );
+  
+  // Fetch user's collections
+  const { data: collections, isLoading, error } = useCollections(collectionsParams);
 
   // Redirect if not authenticated
   if (!authLoading && !isAuthenticated) {
