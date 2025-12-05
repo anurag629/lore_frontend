@@ -83,10 +83,21 @@ export default function Sidebar() {
           <nav className="flex flex-col gap-3">
             {navItems.map((item) => {
               const Icon = item.icon;
-              // Special handling for Profile route - match /profile and /profile/[address]
-              const isActive = item.href === '/profile' 
-                ? pathname === '/profile' || pathname.startsWith('/profile/')
-                : pathname === item.href;
+              // Special handling for routes with dynamic segments
+              let isActive = false;
+              if (item.href === '/profile') {
+                // Match /profile and /profile/[address]
+                isActive = pathname === '/profile' || pathname.startsWith('/profile/');
+              } else if (item.href === '/explore') {
+                // Match /explore and /explore/[id]
+                isActive = pathname === '/explore' || pathname.startsWith('/explore/');
+              } else if (item.href === '/collections') {
+                // Match /collections and /collections/[id]
+                isActive = pathname === '/collections' || pathname.startsWith('/collections/');
+              } else {
+                // Exact match for other routes
+                isActive = pathname === item.href;
+              }
 
               return (
                 <Link
@@ -142,10 +153,21 @@ export default function Sidebar() {
         <div className="glass rounded-2xl px-1 py-1.5 flex items-center justify-between gap-0.5 shadow-2xl shadow-black/50 border border-white/10 bg-slate-950/90 backdrop-blur-xl w-full overflow-hidden">
           {navItems.map((item) => {
             const Icon = item.icon;
-            // Special handling for Profile route - match /profile and /profile/[address]
-            const isActive = item.href === '/profile' 
-              ? pathname === '/profile' || pathname.startsWith('/profile/')
-              : pathname === item.href;
+            // Special handling for routes with dynamic segments
+            let isActive = false;
+            if (item.href === '/profile') {
+              // Match /profile and /profile/[address]
+              isActive = pathname === '/profile' || pathname.startsWith('/profile/');
+            } else if (item.href === '/explore') {
+              // Match /explore and /explore/[id]
+              isActive = pathname === '/explore' || pathname.startsWith('/explore/');
+            } else if (item.href === '/collections') {
+              // Match /collections and /collections/[id]
+              isActive = pathname === '/collections' || pathname.startsWith('/collections/');
+            } else {
+              // Exact match for other routes
+              isActive = pathname === item.href;
+            }
 
             return (
               <Link
