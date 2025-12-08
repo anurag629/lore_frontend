@@ -11,6 +11,8 @@ import type {
   CreateDerivativeData,
   ClaimRoyaltiesResponse,
   RoyaltyBalance,
+  RoyaltyPayment,
+  MultiParentDerivativeData,
 } from '@/types/api';
 
 // Hook to fetch list of assets
@@ -391,6 +393,48 @@ export function useCreateDerivative() {
   };
 }
 
+// Hook to create multi-parent derivative
+export function useCreateMultiParentDerivative() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const createMultiParentDerivative = async (data: MultiParentDerivativeData): Promise<IPAsset | null> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const formData = new FormData();
+      formData.append('parent_assets', JSON.stringify(data.parent_assets));
+      formData.append('title', data.title);
+      formData.append('description', data.description);
+      formData.append('commercial_rights', data.commercial_rights.toString());
+
+      if (data.media_file) {
+        formData.append('media_file', data.media_file);
+      } else if (data.media_url) {
+        formData.append('media_url', data.media_url);
+      }
+
+      const result: IPAsset = await assetsAPI.createMultiParentDerivative(formData);
+      return result;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || err.response?.data?.error || 'Failed to create multi-parent derivative';
+      setError(errorMessage);
+      console.error('Error creating multi-parent derivative:', err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    createMultiParentDerivative,
+    loading,
+    error,
+    clearError: () => setError(null),
+  };
+}
+
 // Hook to claim royalties
 export function useClaimRoyalties() {
   const [loading, setLoading] = useState(false);
@@ -451,6 +495,39 @@ export function useRoyaltyBalance(assetId: string | null) {
     loading,
     error,
     refetch: fetchBalance,
+  };
+}
+
+// Hook to get royalty payment detail
+export function useRoyaltyPayment(paymentId: string | null) {
+  const [payment, setPayment] = useState<RoyaltyPayment | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPayment = useCallback(async () => {
+    if (!paymentId) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const data: RoyaltyPayment = await assetsAPI.getRoyaltyPayment(paymentId);
+      setPayment(data);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to fetch payment');
+      console.error('Error fetching royalty payment:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [paymentId]);
+
+  useEffect(() => {
+    fetchPayment();
+  }, [fetchPayment]);
+
+  return {
+    payment,
+    loading,
+    error,
+    refetch: fetchPayment,
   };
 }
 

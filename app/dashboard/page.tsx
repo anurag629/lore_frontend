@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ArchiveActions from '@/components/assets/ArchiveActions';
+import { Shield, Users, Gavel, Coins } from 'lucide-react';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -161,7 +162,7 @@ export default function Dashboard() {
             </div>
             <Link
               href="/dashboard/ai-analytics"
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-500 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
+              className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-500 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
             >
               <Zap className="w-4 h-4" />
               <span className="hidden sm:inline">AI Analytics</span>
@@ -172,7 +173,7 @@ export default function Dashboard() {
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Total Earnings */}
-          <div className="bg-gradient-to-br from-amber-600 to-orange-700 p-5 sm:p-6 rounded-xl shadow-xl shadow-amber-600/20 border border-amber-500/50">
+          <div className="bg-linear-to-br from-amber-600 to-orange-700 p-5 sm:p-6 rounded-xl shadow-xl shadow-amber-600/20 border border-amber-500/50">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -192,11 +193,11 @@ export default function Dashboard() {
 
           {/* Assets Minted */}
           <div className="bg-slate-900 p-5 sm:p-6 rounded-xl border border-slate-800 hover:border-amber-500/50 transition-all duration-300">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-600/20 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-600/20 rounded-lg flex items-center justify-center mb-3 sm:mb-4 shrink-0">
               <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
             </div>
             <div className="text-2xl sm:text-3xl font-bold text-slate-50 mb-1">{user.assets_count}</div>
-            <div className="text-slate-400 text-xs sm:text-sm">Assets Minted</div>
+            <div className="text-slate-400 text-sm">Assets Minted</div>
           </div>
 
           {/* Total Derivatives */}
@@ -205,7 +206,7 @@ export default function Dashboard() {
               <GitBranch className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
             </div>
             <div className="text-2xl sm:text-3xl font-bold text-slate-50 mb-1">{totalDerivatives}</div>
-            <div className="text-slate-400 text-xs sm:text-sm">Total Derivatives</div>
+            <div className="text-slate-400 text-sm">Total Derivatives</div>
           </div>
 
           {/* Total Spinoffs (from user data) */}
@@ -214,8 +215,67 @@ export default function Dashboard() {
               <Eye className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
             </div>
             <div className="text-2xl sm:text-3xl font-bold text-slate-50 mb-1">{user.total_spinoffs}</div>
-            <div className="text-slate-400 text-xs sm:text-sm">Total Spin-offs</div>
+            <div className="text-slate-400 text-sm">Total Spin-offs</div>
           </div>
+        </div>
+
+        {/* Quick Manage */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          <Link
+            href="/groups"
+            className="bg-slate-900 p-5 sm:p-6 rounded-xl border border-slate-800 hover:border-amber-500/50 transition-all duration-300 group"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-600/20 rounded-lg flex items-center justify-center">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
+              </div>
+              <span className="text-xs text-slate-400 group-hover:text-amber-300">Groups</span>
+            </div>
+            <p className="text-lg font-semibold text-white mb-1">Group IP</p>
+            <p className="text-slate-400 text-sm">Create, register, and share royalties with pooled assets.</p>
+          </Link>
+
+          <Link
+            href="/disputes"
+            className="bg-slate-900 p-5 sm:p-6 rounded-xl border border-slate-800 hover:border-amber-500/50 transition-all duration-300 group"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
+                <Gavel className="w-5 h-5 sm:w-6 sm:h-6 text-red-300" />
+              </div>
+              <span className="text-xs text-slate-400 group-hover:text-amber-300">Disputes</span>
+            </div>
+            <p className="text-lg font-semibold text-white mb-1">Disputes</p>
+            <p className="text-slate-400 text-sm">Review and resolve IP challenges and evidence.</p>
+          </Link>
+
+          <Link
+            href="/dashboard?focus=permissions"
+            className="bg-slate-900 p-5 sm:p-6 rounded-xl border border-slate-800 hover:border-amber-500/50 transition-all duration-300 group"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-blue-300" />
+              </div>
+              <span className="text-xs text-slate-400 group-hover:text-amber-300">Permissions</span>
+            </div>
+            <p className="text-lg font-semibold text-white mb-1">Permissions</p>
+            <p className="text-slate-400 text-sm">Open an asset and manage signer and derivative permissions.</p>
+          </Link>
+
+          <Link
+            href="/royalties"
+            className="bg-slate-900 p-5 sm:p-6 rounded-xl border border-slate-800 hover:border-amber-500/50 transition-all duration-300 group"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                <Coins className="w-5 h-5 sm:w-6 sm:h-6 text-green-300" />
+              </div>
+              <span className="text-xs text-slate-400 group-hover:text-amber-300">Royalties</span>
+            </div>
+            <p className="text-lg font-semibold text-white mb-1">Royalties</p>
+            <p className="text-slate-400 text-sm">Track balances and payments. See payment details in /royalties/[id].</p>
+          </Link>
         </div>
 
         {/* Asset Ledger */}
@@ -348,7 +408,7 @@ export default function Dashboard() {
                     className="p-4 hover:bg-slate-800/30 transition-colors"
                   >
                     <div className="flex items-start gap-3 mb-3">
-                      <div className="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <div className="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
                         {asset.media_url && asset.media_url !== 'https://placeholder.example.com/media' ? (
                           <img
                             src={asset.media_url}

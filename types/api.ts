@@ -168,6 +168,7 @@ export interface ApiError {
 
 // Group IP Types
 export interface GroupIP {
+  id: string;  // alias for uuid
   uuid: string;
   story_group_id: string | null;
   name: string;
@@ -179,17 +180,22 @@ export interface GroupIP {
   registration_status: 'pending' | 'registered' | 'failed';
   registration_transaction_hash: string | null;
   is_active: boolean;
+  members?: GroupIPMembership[];
   created_at: string;
   updated_at: string;
 }
 
 export interface GroupIPMembership {
+  id: string;  // alias for uuid
   uuid: string;
   group: string; // Group UUID
   asset: IPAssetListItem;
+  asset_id?: string;
   revenue_share_percentage: number;
   is_active: boolean;
   added_at: string;
+  removed_at?: string | null;
+  transaction_hash?: string | null;
 }
 
 export interface GroupIPStatistics {
@@ -288,7 +294,7 @@ export interface PermissionSummary {
 // Multi-Parent Derivative Types
 export interface MultiParentDerivativeData {
   parent_assets: Array<{
-    asset_uuid: string;
+    parent_asset_id: string;
     attribution_percentage: number;
   }>;
   title: string;

@@ -2,11 +2,11 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Upload, Check, AlertCircle, Loader2, GitBranch, Info } from 'lucide-react';
-import { useState, useRef, DragEvent, ChangeEvent } from 'react';
+import { useState, useRef, DragEvent, ChangeEvent, useMemo } from 'react';
 import Button from '@/components/ui/Button';
-import { useCreateDerivative } from '@/hooks/useAssets';
+import { useAssets, useCreateDerivative, useCreateMultiParentDerivative } from '@/hooks/useAssets';
 import { useToast } from '@/components/ui/Toast';
-import type { CreateDerivativeData } from '@/types/api';
+import type { CreateDerivativeData, IPAssetListItem } from '@/types/api';
 import type { IPAsset } from '@/types/api';
 
 interface RemixModalProps {
@@ -24,11 +24,17 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
     description: '',
     commercial_rights: parentAsset.commercial_rights, // Inherit from parent
   });
+  const [useMultiParents, setUseMultiParents] = useState(false);
+  const [parentSelections, setParentSelections] = useState<
+    { parent_asset_id: string; attribution_percentage: number }[]
+  >([{ parent_asset_id: parentAsset.id, attribution_percentage: 100 }]);
   const [dragActive, setDragActive] = useState(false);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { createDerivative, loading, error, clearError } = useCreateDerivative();
+  const { createMultiParentDerivative, loading: loadingMulti } = useCreateMultiParentDerivative();
+  const { assets } = useAssets(); // all assets for selection
   const { showToast } = useToast();
 
   // Format wallet address for display
@@ -86,6 +92,11 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
     }
   };
 
+  const totalAttribution = useMemo(
+    () => parentSelections.reduce((sum, p) => sum + (Number(p.attribution_percentage) || 0), 0),
+    [parentSelections]
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -99,15 +110,46 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
       return;
     }
 
-    const derivativeData: CreateDerivativeData = {
-      parent_asset_id: parentAsset.id,
+    // Single parent flow
+    if (!useMultiParents) {
+      const derivativeData: CreateDerivativeData = {
+        parent_asset_id: parentAsset.id,
+        title: formData.title,
+        description: formData.description,
+        commercial_rights: formData.commercial_rights,
+        media_file: file || undefined,
+      };
+
+      const result = await createDerivative(derivativeData);
+
+      if (result) {
+        setSuccess(true);
+        setTimeout(() => {
+          setSuccess(false);
+          handleClose();
+          if (onSuccess) onSuccess();
+        }, 2000);
+      }
+      return;
+    }
+
+    // Multi-parent flow
+    if (parentSelections.length === 0) {
+      showToast('Add at least one parent', 'warning');
+      return;
+    }
+    if (Math.abs(totalAttribution - 100) > 0.01) {
+      showToast('Attribution percentages must sum to 100%', 'warning');
+      return;
+    }
+
+    const result = await createMultiParentDerivative({
+      parent_assets: parentSelections,
       title: formData.title,
       description: formData.description,
       commercial_rights: formData.commercial_rights,
       media_file: file || undefined,
-    };
-
-    const result = await createDerivative(derivativeData);
+    });
 
     if (result) {
       setSuccess(true);
@@ -142,7 +184,7 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-60"
           />
 
           {/* Modal */}
@@ -150,7 +192,7 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl max-h-[90vh] overflow-y-auto z-[70] p-4"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl max-h-[90vh] overflow-y-auto z-70 p-4"
           >
             <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl">
               {/* Header */}
@@ -173,51 +215,117 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
               <form onSubmit={handleSubmit}>
                 {/* Content */}
                 <div className="p-6 space-y-6">
-                  {/* Parent Asset Info */}
-                  <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-                    <div className="flex items-center gap-2 text-slate-400 mb-3">
-                      <Info className="w-4 h-4" />
-                      <span className="text-sm font-medium">Remixing From</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-slate-700 rounded-lg overflow-hidden flex-shrink-0">
-                        {parentAsset.media_url && parentAsset.media_url !== 'https://placeholder.example.com/media' ? (
-                          <img
-                            src={parentAsset.media_url}
-                            alt={parentAsset.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Sparkles className="w-6 h-6 text-amber-400" />
-                          </div>
-                        )}
+                  {/* Parent Assets */}
+                  <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-slate-400">
+                        <Info className="w-4 h-4" />
+                        <span className="text-sm font-medium">Parents</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-50 mb-1 line-clamp-1">
-                          {parentAsset.title}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          by {parentAsset.creator.display_name || formatAddress(parentAsset.creator.wallet_address)}
-                        </p>
-                      </div>
+                      <label className="flex items-center gap-2 text-xs text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={useMultiParents}
+                          onChange={(e) => setUseMultiParents(e.target.checked)}
+                          className="w-4 h-4 text-amber-500 bg-slate-800 border-slate-600 rounded"
+                        />
+                        Multi-parent remix
+                      </label>
                     </div>
 
-                    {/* License Info */}
-                    <div className="mt-4 pt-4 border-t border-slate-700">
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <p className="text-slate-500 mb-1">Royalty to Original Creator</p>
-                          <p className="text-amber-400 font-semibold">{parentAsset.royalty_percentage}%</p>
+                    {!useMultiParents && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-slate-700 rounded-lg overflow-hidden shrink-0">
+                          {parentAsset.media_url && parentAsset.media_url !== 'https://placeholder.example.com/media' ? (
+                            <img
+                              src={parentAsset.media_url}
+                              alt={parentAsset.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Sparkles className="w-6 h-6 text-amber-400" />
+                            </div>
+                          )}
                         </div>
-                        <div>
-                          <p className="text-slate-500 mb-1">Commercial Rights</p>
-                          <p className={parentAsset.commercial_rights ? 'text-green-400' : 'text-red-400'}>
-                            {parentAsset.commercial_rights ? 'Allowed' : 'Not Allowed'}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-slate-50 mb-1 line-clamp-1">
+                            {parentAsset.title}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            by {parentAsset.creator.display_name || formatAddress(parentAsset.creator.wallet_address)}
                           </p>
                         </div>
                       </div>
-                    </div>
+                    )}
+
+                    {useMultiParents && (
+                      <div className="space-y-3">
+                        {parentSelections.map((p, idx) => (
+                          <div key={idx} className="flex items-center gap-3">
+                            <select
+                              className="flex-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white"
+                              value={p.parent_asset_id}
+                              onChange={(e) => {
+                                const next = [...parentSelections];
+                                next[idx].parent_asset_id = e.target.value;
+                                setParentSelections(next);
+                              }}
+                            >
+                              <option value="">Select parent...</option>
+                              {assets
+                                .filter((a) => !a.is_deleted)
+                                .map((a: IPAssetListItem) => (
+                                  <option key={a.id} value={a.id}>
+                                    {a.title}
+                                  </option>
+                                ))}
+                            </select>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                value={p.attribution_percentage}
+                                onChange={(e) => {
+                                  const next = [...parentSelections];
+                                  next[idx].attribution_percentage = Number(e.target.value);
+                                  setParentSelections(next);
+                                }}
+                                className="w-28 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white"
+                              />
+                              <span className="text-slate-400 text-sm">%</span>
+                            </div>
+                            {parentSelections.length > 1 && (
+                              <button
+                                type="button"
+                                className="text-slate-400 hover:text-red-400 text-sm"
+                                onClick={() => setParentSelections(parentSelections.filter((_, i) => i !== idx))}
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <div className="flex items-center gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() =>
+                              setParentSelections([
+                                ...parentSelections,
+                                { parent_asset_id: '', attribution_percentage: 0 },
+                              ])
+                            }
+                            className="text-sm"
+                          >
+                            Add Parent
+                          </Button>
+                          <p className="text-xs text-slate-400">Total attribution: {totalAttribution.toFixed(2)}%</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Success Message */}
@@ -369,7 +477,7 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
 
                       <div className="pt-3 border-t border-white/5">
                         <div className="flex items-start gap-2">
-                          <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                          <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                           <p className="text-xs text-slate-400">
                             {parentAsset.royalty_percentage}% of revenue from this derivative will automatically go to the original creator through Story Protocol smart contracts.
                           </p>
@@ -393,7 +501,7 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
                   <Button
                     type="submit"
                     variant="primary"
-                    className="px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    className="px-6 bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                     disabled={loading || success}
                   >
                     {loading ? (

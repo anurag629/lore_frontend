@@ -329,6 +329,12 @@ export const assetsAPI = {
     return response.data;
   },
 
+  // Get royalty payment detail
+  getRoyaltyPayment: async (id: string) => {
+    const response = await api.get(`/api/assets/royalties/${id}/`);
+    return response.data;
+  },
+
   // Update asset (only title and description)
   updateAsset: async (id: string, data: { title: string; description: string }) => {
     const response = await api.patch(`/api/assets/assets/${id}/`, data);
@@ -641,7 +647,7 @@ export const groupsAPI = {
 
   // Add member to group
   addMember: async (id: string, data: {
-    asset_uuid: string;
+    asset_id: string;
     revenue_share_percentage: number;
   }) => {
     const response = await api.post(`/api/assets/groups/${id}/add_member/`, data);
@@ -650,7 +656,7 @@ export const groupsAPI = {
 
   // Remove member from group
   removeMember: async (id: string, data: {
-    asset_uuid: string;
+    asset_id: string;
   }) => {
     const response = await api.post(`/api/assets/groups/${id}/remove_member/`, data);
     return response.data;

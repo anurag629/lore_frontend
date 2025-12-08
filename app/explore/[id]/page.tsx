@@ -193,7 +193,7 @@ export default function AssetDetailPage() {
         >
           <div className="p-8 bg-slate-900/50 backdrop-blur-sm border border-red-500/20 rounded-2xl shadow-2xl">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center shrink-0">
                 <AlertCircle className="w-6 h-6 text-red-400" />
               </div>
               <div>
@@ -288,7 +288,7 @@ export default function AssetDetailPage() {
               {/* Main Media Card */}
               <div className="group relative bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-800 overflow-hidden shadow-2xl hover:border-amber-500/50 transition-all duration-300">
                 {/* Media Container */}
-                <div className="relative aspect-video bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+                <div className="relative aspect-video bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
                   {asset.media_url && asset.media_url !== 'https://placeholder.example.com/media' ? (
                     <>
                       <OptimizedImage
@@ -298,10 +298,10 @@ export default function AssetDetailPage() {
                         className="object-cover group-hover:scale-105 transition-transform duration-700"
                         priority
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-linear-to-t from-slate-900/80 via-transparent to-transparent" />
                     </>
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-600/20 via-orange-600/20 to-amber-600/20 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-linear-to-br from-amber-600/20 via-orange-600/20 to-amber-600/20 flex items-center justify-center">
                       <motion.div
                         animate={{ rotate: [0, 360] }}
                         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -322,7 +322,7 @@ export default function AssetDetailPage() {
                         <motion.div
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg backdrop-blur-sm"
+                          className="bg-linear-to-r from-purple-500 to-pink-500 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg backdrop-blur-sm"
                         >
                           <TrendingUp className="w-4 h-4 text-white" />
                           <span className="text-white text-sm font-semibold">Derivative</span>
@@ -364,7 +364,7 @@ export default function AssetDetailPage() {
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <Shield className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                        <Shield className="w-4 h-4 text-amber-400 shrink-0" />
                         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Story Protocol IP ID</p>
                       </div>
                       {asset.story_ip_id ? (
@@ -419,7 +419,7 @@ export default function AssetDetailPage() {
                     href={`/explore/${asset.parent_asset.id}`}
                     className="group flex items-center gap-4 p-4 bg-slate-800/50 hover:bg-slate-800 rounded-xl transition-all duration-200"
                   >
-                    <div className="relative w-16 h-16 bg-slate-700 rounded-xl overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+                    <div className="relative w-16 h-16 bg-slate-700 rounded-xl overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-200">
                       {asset.parent_asset.media_url && asset.parent_asset.media_url !== 'https://placeholder.example.com/media' ? (
                         <OptimizedImage
                           src={asset.parent_asset.media_url}
@@ -428,7 +428,7 @@ export default function AssetDetailPage() {
                           className="object-cover"
                         />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-600/20 to-pink-600/20">
+                        <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-purple-600/20 to-pink-600/20">
                           <Sparkles className="w-8 h-8 text-purple-400" />
                         </div>
                       )}
@@ -509,7 +509,7 @@ export default function AssetDetailPage() {
                   href={`/profile/${asset.creator.wallet_address}`}
                   className="flex items-center gap-4 group"
                 >
-                  <div className="relative w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0 overflow-hidden ring-2 ring-slate-800 group-hover:ring-amber-500/50 transition-all">
+                  <div className="relative w-14 h-14 rounded-xl bg-linear-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-slate-800 group-hover:ring-amber-500/50 transition-all">
                     {asset.creator.avatar_url ? (
                       <OptimizedImage
                         src={asset.creator.avatar_url}
@@ -573,7 +573,7 @@ export default function AssetDetailPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="bg-gradient-to-br from-amber-900/30 via-orange-900/20 to-amber-900/30 rounded-xl border border-amber-800/50 p-6 backdrop-blur-sm shadow-xl shadow-amber-900/20"
+                  className="bg-linear-to-br from-amber-900/30 via-orange-900/20 to-amber-900/30 rounded-xl border border-amber-800/50 p-6 backdrop-blur-sm shadow-xl shadow-amber-900/20"
                 >
                   <div className="flex items-center gap-3 mb-5">
                     <div className="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
@@ -607,14 +607,14 @@ export default function AssetDetailPage() {
                           animate={{ opacity: 1, y: 0 }}
                           className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg mb-4 flex items-center gap-2"
                         >
-                          <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                          <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
                           <p className="text-red-400 text-sm">{claimError}</p>
                         </motion.div>
                       )}
 
                       <Button
                         variant="primary"
-                        className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 shadow-lg shadow-amber-600/20"
+                        className="w-full bg-linear-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 shadow-lg shadow-amber-600/20"
                         onClick={handleClaimRoyalties}
                         disabled={claiming || !balance || parseFloat(balance.balance) === 0}
                       >
@@ -658,11 +658,11 @@ export default function AssetDetailPage() {
                 <div className="space-y-4">
                   <div className="flex items-start gap-4 p-4 bg-slate-800/30 rounded-xl border border-slate-700/50">
                     {asset.allow_derivatives ? (
-                      <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0">
                         <CheckCircle2 className="w-5 h-5 text-green-400" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center shrink-0">
                         <XCircle className="w-5 h-5 text-red-400" />
                       </div>
                     )}
@@ -678,11 +678,11 @@ export default function AssetDetailPage() {
 
                   <div className="flex items-start gap-4 p-4 bg-slate-800/30 rounded-xl border border-slate-700/50">
                     {asset.commercial_rights ? (
-                      <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0">
                         <CheckCircle2 className="w-5 h-5 text-green-400" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center shrink-0">
                         <XCircle className="w-5 h-5 text-red-400" />
                       </div>
                     )}
@@ -697,7 +697,7 @@ export default function AssetDetailPage() {
                   </div>
 
                   <div className="flex items-start gap-4 p-4 bg-slate-800/30 rounded-xl border border-slate-700/50">
-                    <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-amber-500/20 rounded-lg flex items-center justify-center shrink-0">
                       <DollarSign className="w-5 h-5 text-amber-400" />
                     </div>
                     <div className="flex-1">
@@ -824,11 +824,11 @@ export default function AssetDetailPage() {
                             className="object-cover group-hover:scale-110 transition-transform duration-500"
                           />
                         ) : (
-                          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-pink-600/20 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-linear-to-br from-purple-600/20 to-pink-600/20 flex items-center justify-center">
                             <Sparkles className="w-12 h-12 text-purple-400" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
 
                       <div className="p-5">
@@ -839,7 +839,7 @@ export default function AssetDetailPage() {
                           {derivative.description}
                         </p>
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          <div className="w-7 h-7 bg-linear-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
                             {derivative.creator.avatar_url ? (
                               <OptimizedImage
                                 src={derivative.creator.avatar_url}

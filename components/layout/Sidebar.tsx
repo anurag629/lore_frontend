@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Compass, BarChart3, User, Sparkles, Settings, Plus, FolderOpen } from 'lucide-react';
+import { Home, Compass, BarChart3, User, Sparkles, Settings, Plus, FolderOpen, MoreHorizontal } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -27,6 +27,7 @@ const navItems: NavItem[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [localMintModalOpen, setLocalMintModalOpen] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   
   // Try to use keyboard shortcuts context if available, otherwise use local state
   let keyboardContext: ReturnType<typeof useKeyboardShortcutsContext> | null = null;
@@ -203,8 +204,57 @@ export default function Sidebar() {
             </div>
             <span className="text-[9px] sm:text-[10px] font-medium leading-tight">Mint</span>
           </button>
+
+          <button
+            onClick={() => setShowMore(!showMore)}
+            className="flex flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-slate-400 hover:text-white flex-shrink-0 max-w-[20%]"
+          >
+            <div className="p-1.5 sm:p-2 rounded-lg bg-slate-800 text-white border border-white/10">
+              <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <span className="text-[9px] sm:text-[10px] font-medium leading-tight">More</span>
+          </button>
         </div>
       </div>
+
+      {/* Mobile More sheet */}
+      {showMore && (
+        <div className="lg:hidden fixed inset-0 z-50" onClick={() => setShowMore(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-slate-950 border-t border-white/10 rounded-t-2xl p-4 space-y-3 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-slate-200 font-semibold">Shortcuts</span>
+              <button
+                className="text-slate-400 hover:text-white text-sm"
+                onClick={() => setShowMore(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <Link href="/groups" className="p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50" onClick={() => setShowMore(false)}>
+                Groups
+                <p className="text-xs text-slate-500 mt-1">Manage pooled assets</p>
+              </Link>
+              <Link href="/disputes" className="p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50" onClick={() => setShowMore(false)}>
+                Disputes
+                <p className="text-xs text-slate-500 mt-1">Review challenges</p>
+              </Link>
+              <Link href="/dashboard?focus=permissions" className="p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50" onClick={() => setShowMore(false)}>
+                Permissions
+                <p className="text-xs text-slate-500 mt-1">Open an asset to manage</p>
+              </Link>
+              <Link href="/royalties" className="p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50" onClick={() => setShowMore(false)}>
+                Royalties
+                <p className="text-xs text-slate-500 mt-1">Track payments</p>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -174,12 +174,12 @@ export function useAddMember() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const addMember = useCallback(async (groupId: string, assetUuid: string, revenueShare: number): Promise<boolean> => {
+  const addMember = useCallback(async (groupId: string, assetId: string, revenueShare: number): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
       await groupsAPI.addMember(groupId, {
-        asset_uuid: assetUuid,
+        asset_id: assetId,
         revenue_share_percentage: revenueShare,
       });
       return true;
@@ -206,11 +206,11 @@ export function useRemoveMember() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const removeMember = useCallback(async (groupId: string, assetUuid: string): Promise<boolean> => {
+  const removeMember = useCallback(async (groupId: string, assetId: string): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
-      await groupsAPI.removeMember(groupId, { asset_uuid: assetUuid });
+      await groupsAPI.removeMember(groupId, { asset_id: assetId });
       return true;
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.response?.data?.error || 'Failed to remove member';
