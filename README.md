@@ -12,7 +12,7 @@ npm install
 
 ### 2. Configure Environment
 
-Create `.env.local` file in `lore-frontend/` directory:
+Create `.env.local` file in `lore_frontend/` directory:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
@@ -33,15 +33,25 @@ Application runs at `http://localhost:3000`
 2. **Connect Wallet:** Click "Connect Wallet" and select wallet provider
 3. **Sign Message:** Authenticate with your wallet signature
 4. **Create Assets:** Click "Mint IP Asset" to register new IP on Story Protocol
-5. **Browse Assets:** Visit "Explore" to see all assets
-6. **Create Derivatives:** Click "Create Remix" on any asset that allows derivatives
+5. **Groups & Members:** Open "Groups" to create/register group IPs and manage members
+6. **Disputes:** Raise disputes from an asset page or manage them in "Disputes"
+7. **Permissions:** Manage asset-level permissions via the asset detail → "Manage Permissions"
+8. **Royalties:** Track payments and details under "Royalties"
+9. **Derivatives:** Use "Create Remix" (supports multi-parent attribution sums to 100%)
 
 ## Pages
 
 - **Home (`/`)** - Landing page with features
 - **Explore (`/explore`)** - Browse all IP assets
-- **Asset Detail (`/explore/[id]`)** - View asset details, create remixes, claim royalties
-- **Dashboard (`/dashboard`)** - Your assets and earnings (requires authentication)
+- **Asset Detail (`/explore/[id]`)** - View asset details, raise disputes, manage permissions, create remixes, claim royalties
+- **Dashboard (`/dashboard`)** - Personalized overview + quick links to manage Groups, Disputes, Permissions, Royalties (auth required)
+- **Groups (`/groups`)** - List and filter group IPs
+- **Group Detail (`/groups/[id]`)** - Stats, royalty distributions, add/remove members, register group
+- **Disputes (`/disputes`)** - List and filter disputes
+- **Dispute Detail (`/disputes/[id]`)** - Evidence, cancel/resolve flows
+- **Permissions (`/assets/[id]/permissions`)** - Grant/revoke asset permissions
+- **Royalties (`/royalties`)** - Royalty payments list with analytics
+- **Royalty Detail (`/royalties/[id]`)** - Payment breakdown + explorer link
 
 ## Key Features
 
@@ -49,8 +59,11 @@ Application runs at `http://localhost:3000`
 - **Wallet Connection** - Reown AppKit (WalletConnect v2)
 - **SIWE Authentication** - Sign-In with Ethereum
 - **IP Asset Creation** - Upload media, set license terms, register on Story Protocol
-- **Derivative Creation** - Create remixes with automatic royalty tracking
-- **Royalty Management** - Check balance and claim earnings
+- **Group IPs** - Create/register groups, view stats, manage members & distributions
+- **Derivative Creation** - Single or multi-parent remixes with attribution validation
+- **Permissions** - Asset-level grant/revoke & permission summaries
+- **Disputes** - Raise, track, submit evidence, and resolve disputes
+- **Royalty Management** - Track payments, view details, and claim earnings
 
 ### AI-Powered Features ✨
 - **AI Title Generation** - Get 4 creative title suggestions from your description
@@ -59,30 +72,14 @@ Application runs at `http://localhost:3000`
 - **Real-time AI Processing** - Loading states and instant feedback
 - **Smart Caching** - Fast responses with Redis-backed caching
 
-## Project Structure
+## Navigation & Structure
 
-```
-lore-frontend/
-├── app/                    # Next.js App Router pages
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Home page
-│   ├── explore/           # Browse assets
-│   ├── dashboard/         # User dashboard
-│   └── globals.css        # Global styles
-├── components/            # React components
-│   ├── layout/           # Header, Footer
-│   ├── mint/             # MintModal (with AI features), RemixModal
-│   ├── ui/               # Button, Card components
-│   └── dashboard/        # Dashboard components
-├── hooks/                 # Custom React hooks
-│   ├── useAuth.ts        # Wallet authentication
-│   ├── useAssets.ts      # Asset CRUD operations
-│   └── useAI.ts          # AI features (NEW)
-├── lib/                   # Utilities
-│   ├── api.ts            # API client (includes aiAPI)
-│   └── types.ts          # TypeScript types (includes AI types)
-└── package.json
-```
+- **Dashboard**: "Manage" cards link to Groups, Disputes, Permissions, Royalties for quick access on all screen sizes.
+- **Sidebar**: Primary routes + a compact "More" overflow for Groups/Disputes/Permissions/Royalties on mobile.
+- **Pages & Data**:
+  - `app/groups`, `app/disputes`, `app/royalties`, `app/assets/[id]/permissions` for management flows
+  - Hooks: `useGroups`, `useDisputes`, `usePermissions`, `useAssets` (multi-parent derivatives + royalty payment)
+  - API clients: `lib/api.ts` for groups, disputes, permissions, royalties, and assets
 
 ## Using AI Features
 
