@@ -1,10 +1,6 @@
 'use client';
 
 import { ValidationWorkflowResult } from '@/lib/types';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -13,7 +9,7 @@ import {
   Star,
   DollarSign,
   Clock,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 
 interface ValidationResultProps {
@@ -22,332 +18,175 @@ interface ValidationResultProps {
 }
 
 export function ValidationResult({ result, compact = false }: ValidationResultProps) {
-  const getVerdictIcon = () => {
+  const verdict = (() => {
     switch (result.overall_verdict) {
       case 'approved':
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+        return { text: 'Approved for Minting', icon: <CheckCircle2 className="h-5 w-5 text-green-500" />, color: 'border-green-500/40 bg-green-500/5' };
       case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+        return { text: 'Approved with Warnings', icon: <AlertTriangle className="h-5 w-5 text-amber-500" />, color: 'border-amber-500/40 bg-amber-500/5' };
       case 'rejected':
-        return <XCircle className="h-5 w-5 text-red-500" />;
+      default:
+        return { text: 'Not Recommended for Minting', icon: <XCircle className="h-5 w-5 text-red-500" />, color: 'border-red-500/40 bg-red-500/5' };
     }
-  };
-
-  const getVerdictColor = () => {
-    switch (result.overall_verdict) {
-      case 'approved':
-        return 'bg-green-50 border-green-200';
-      case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
-      case 'rejected':
-        return 'bg-red-50 border-red-200';
-    }
-  };
-
-  const getVerdictText = () => {
-    switch (result.overall_verdict) {
-      case 'approved':
-        return 'Approved for Minting';
-      case 'warning':
-        return 'Approved with Warnings';
-      case 'rejected':
-        return 'Not Recommended for Minting';
-    }
-  };
+  })();
 
   if (compact) {
     return (
-      <div className={`p-4 rounded-lg border ${getVerdictColor()}`}>
+      <div className={`p-4 rounded-lg border ${verdict.color}`}>
         <div className="flex items-center gap-2">
-          {getVerdictIcon()}
-          <span className="font-medium">{getVerdictText()}</span>
+          {verdict.icon}
+          <span className="font-medium text-white">{verdict.text}</span>
         </div>
         {result.warnings.length > 0 && (
-          <div className="mt-2 space-y-1">
+          <ul className="mt-2 space-y-1 text-sm text-slate-400">
             {result.warnings.map((warning, i) => (
-              <p key={i} className="text-sm text-gray-600">{warning}</p>
+              <li key={i}>{warning}</li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Overall Verdict */}
-      <Alert className={getVerdictColor()}>
-        <div className="flex items-start gap-4">
-          {getVerdictIcon()}
-          <div className="flex-1">
-            <AlertTitle className="text-lg font-semibold mb-2">
-              {getVerdictText()}
-            </AlertTitle>
-            <AlertDescription className="space-y-2">
-              <div className="flex items-center gap-4 text-sm">
-                <span>Completed in {result.total_time.toFixed(2)}s</span>
-                <Badge variant="secondary">
-                  {result.steps_completed.length} checks completed
-                </Badge>
-              </div>
-            </AlertDescription>
+    <div className="space-y-6 text-white">
+      {/* Verdict */}
+      <div className={`p-5 rounded-2xl border ${verdict.color}`}>
+        <div className="flex items-start gap-3">
+          {verdict.icon}
+          <div>
+            <div className="text-lg font-semibold">{verdict.text}</div>
+            <div className="text-sm text-slate-400">
+              Completed in {result.total_time.toFixed(2)}s • {result.steps_completed.length} checks
+            </div>
           </div>
         </div>
-      </Alert>
+      </div>
 
       {/* Blockers */}
       {result.blockers.length > 0 && (
-        <Alert variant="destructive">
-          <XCircle className="h-4 w-4" />
-          <AlertTitle>Critical Issues Found</AlertTitle>
-          <AlertDescription>
-            <ul className="mt-2 space-y-1">
-              {result.blockers.map((blocker, i) => (
-                <li key={i} className="text-sm">{blocker}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
+        <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/5">
+          <div className="flex items-center gap-2 text-red-400 font-semibold mb-2">
+            <XCircle className="h-4 w-4" />
+            Critical Issues Found
+          </div>
+          <ul className="space-y-1 text-sm text-red-200">
+            {result.blockers.map((b, i) => (
+              <li key={i}>{b}</li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {/* Warnings */}
       {result.warnings.length > 0 && (
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Recommendations</AlertTitle>
-          <AlertDescription>
-            <ul className="mt-2 space-y-1">
-              {result.warnings.map((warning, i) => (
-                <li key={i} className="text-sm">{warning}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
+        <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5">
+          <div className="flex items-center gap-2 text-amber-300 font-semibold mb-2">
+            <AlertTriangle className="h-4 w-4" />
+            Recommendations
+          </div>
+          <ul className="space-y-1 text-sm text-amber-100">
+            {result.warnings.map((w, i) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
+        </div>
       )}
 
-      {/* Copyright Analysis */}
-      {result.analysis.copyright && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                <CardTitle>Copyright Analysis</CardTitle>
-              </div>
-              <Badge
-                variant={
-                  result.analysis.copyright.risk_level === 'low'
-                    ? 'default'
-                    : result.analysis.copyright.risk_level === 'medium'
-                    ? 'secondary'
-                    : 'destructive'
-                }
-              >
-                {result.analysis.copyright.risk_level.toUpperCase()} RISK
-              </Badge>
+      {/* Analysis Sections */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Copyright */}
+        {result.analysis.copyright && (
+          <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 space-y-2">
+            <div className="flex items-center gap-2 font-semibold">
+              <Shield className="h-5 w-5" /> Copyright Analysis
             </div>
-            <CardDescription>
-              Confidence: {(result.analysis.copyright.confidence * 100).toFixed(0)}%
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span>Similarity Score</span>
-                <span className="font-medium">
-                  {(result.analysis.copyright.similarity_score * 100).toFixed(1)}%
-                </span>
-              </div>
-              <Progress
-                value={result.analysis.copyright.similarity_score * 100}
-                className="h-2"
-              />
+            <div className="text-sm text-slate-400">
+              Risk: <span className="font-semibold text-white">{result.analysis.copyright.risk_level}</span> • Confidence:{' '}
+              {(result.analysis.copyright.confidence * 100).toFixed(0)}%
             </div>
-
-            {result.analysis.copyright.potential_matches.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium mb-2">Similar Assets Found</h4>
-                <div className="space-y-2">
-                  {result.analysis.copyright.potential_matches.slice(0, 3).map((match, i) => (
-                    <div key={i} className="flex justify-between text-sm p-2 bg-gray-50 rounded">
-                      <span className="truncate">{match.asset_title}</span>
-                      <span className="text-gray-600">
-                        {(match.similarity_score * 100).toFixed(0)}% similar
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <h4 className="text-sm font-medium mb-2">Recommendations</h4>
-              <ul className="space-y-1">
+            <div className="text-sm text-slate-300">
+              Similarity: {(result.analysis.copyright.similarity_score * 100).toFixed(1)}%
+            </div>
+            {result.analysis.copyright.recommendations.length > 0 && (
+              <ul className="text-sm text-slate-400 space-y-1">
                 {result.analysis.copyright.recommendations.map((rec, i) => (
-                  <li key={i} className="text-sm text-gray-600">{rec}</li>
+                  <li key={i}>• {rec}</li>
                 ))}
               </ul>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Quality Analysis */}
-      {result.analysis.quality && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Star className="h-5 w-5" />
-                <CardTitle>Quality Analysis</CardTitle>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold">
-                  {result.analysis.quality.overall_score.toFixed(1)}
-                </div>
-                <div className="text-xs text-gray-500">out of 100</div>
-              </div>
-            </div>
-            <CardDescription>
-              Confidence: {(result.analysis.quality.confidence * 100).toFixed(0)}%
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-sm text-gray-600 mb-1">Technical Quality</div>
-                <Progress
-                  value={result.analysis.quality.technical_quality.overall_score}
-                  className="h-2"
-                />
-                <div className="text-xs text-gray-500 mt-1">
-                  {result.analysis.quality.technical_quality.overall_score.toFixed(0)}%
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600 mb-1">Description Quality</div>
-                <Progress
-                  value={result.analysis.quality.description_quality.overall_score}
-                  className="h-2"
-                />
-                <div className="text-xs text-gray-500 mt-1">
-                  {result.analysis.quality.description_quality.overall_score.toFixed(0)}%
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600 mb-1">Metadata Completeness</div>
-                <Progress
-                  value={result.analysis.quality.metadata_completeness}
-                  className="h-2"
-                />
-                <div className="text-xs text-gray-500 mt-1">
-                  {result.analysis.quality.metadata_completeness.toFixed(0)}%
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600 mb-1">Market Appeal</div>
-                <Progress
-                  value={result.analysis.quality.market_appeal}
-                  className="h-2"
-                />
-                <div className="text-xs text-gray-500 mt-1">
-                  {result.analysis.quality.market_appeal.toFixed(0)}%
-                </div>
-              </div>
-            </div>
-
-            {result.analysis.quality.strengths.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium mb-2 text-green-700">Strengths</h4>
-                <ul className="space-y-1">
-                  {result.analysis.quality.strengths.map((strength, i) => (
-                    <li key={i} className="text-sm text-gray-600">✓ {strength}</li>
-                  ))}
-                </ul>
-              </div>
             )}
+          </div>
+        )}
 
+        {/* Quality */}
+        {result.analysis.quality && (
+          <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 space-y-2">
+            <div className="flex items-center gap-2 font-semibold">
+              <Star className="h-5 w-5" /> Quality Analysis
+            </div>
+            <div className="text-2xl font-bold">{result.analysis.quality.overall_score.toFixed(1)}</div>
+            <div className="text-sm text-slate-400">
+              Technical: {result.analysis.quality.technical_quality.overall_score.toFixed(1)} • Description:{' '}
+              {result.analysis.quality.description_quality.overall_score.toFixed(1)}
+            </div>
+            <div className="text-sm text-slate-400">
+              Metadata completeness: {result.analysis.quality.metadata_completeness.toFixed(1)} • Market appeal:{' '}
+              {result.analysis.quality.market_appeal.toFixed(1)}
+            </div>
             {result.analysis.quality.improvement_suggestions.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium mb-2">Improvements</h4>
-                <ul className="space-y-1">
-                  {result.analysis.quality.improvement_suggestions.map((suggestion, i) => (
-                    <li key={i} className="text-sm text-gray-600">{suggestion}</li>
-                  ))}
-                </ul>
-              </div>
+              <ul className="text-sm text-slate-400 space-y-1">
+                {result.analysis.quality.improvement_suggestions.map((rec, i) => (
+                  <li key={i}>• {rec}</li>
+                ))}
+              </ul>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
 
-      {/* Pricing Analysis */}
-      {result.analysis.pricing && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              <CardTitle>Pricing Recommendations</CardTitle>
+        {/* Pricing */}
+        {result.analysis.pricing && (
+          <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 space-y-2">
+            <div className="flex items-center gap-2 font-semibold">
+              <TrendingUp className="h-5 w-5" /> Pricing Recommendation
             </div>
-            <CardDescription>
-              Based on {result.analysis.pricing.similar_assets_count} similar assets
-              {result.analysis.pricing.quality_score_used &&
-                ` • Quality Score: ${result.analysis.pricing.quality_score_used.toFixed(0)}/100`
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              {result.analysis.pricing.suggested_tiers.map((tier) => (
-                <div
-                  key={tier.tier}
-                  className={`p-4 rounded-lg border ${
-                    tier.tier === 'balanced'
-                      ? 'border-blue-300 bg-blue-50'
-                      : 'border-gray-200'
-                  }`}
-                >
-                  <div className="text-center">
-                    <div className="text-xs font-medium text-gray-500 uppercase mb-1">
-                      {tier.tier}
-                      {tier.tier === 'balanced' && (
-                        <Badge variant="default" className="ml-2">Recommended</Badge>
-                      )}
-                    </div>
-                    <div className="text-3xl font-bold text-gray-900">
-                      {tier.royalty_percentage}%
-                    </div>
-                    <p className="text-xs text-gray-600 mt-2">
-                      {tier.description.split('.')[0]}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <div className="text-lg font-semibold">
+              {result.analysis.pricing.suggested_tiers[0]?.royalty_percentage ?? '--'}% ({result.analysis.pricing.suggested_tiers[0]?.tier || 'tier'})
             </div>
+            <div className="text-sm text-slate-400">
+              Market avg: {result.analysis.pricing.market_average.toFixed(1)}% • Demand score:{' '}
+              {result.analysis.pricing.demand_prediction.toFixed(1)}
+            </div>
+            <div className="text-sm text-slate-400">
+              Confidence: {(result.analysis.pricing.confidence * 100).toFixed(0)}%
+            </div>
+            {result.analysis.pricing.reasoning && (
+              <ul className="text-sm text-slate-400 space-y-1">
+                <li>• {result.analysis.pricing.reasoning}</li>
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
 
-            <div className="flex items-center gap-2 text-sm">
-              <TrendingUp className="h-4 w-4 text-gray-500" />
-              <span className="text-gray-600">
-                Market Average: {result.analysis.pricing.market_average.toFixed(1)}%
-              </span>
-              <span className="text-gray-400">•</span>
-              <span className="text-gray-600">
-                Demand Prediction: {result.analysis.pricing.demand_prediction.toFixed(0)}/100
-              </span>
+      {/* Timeline */}
+      <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/60 space-y-3">
+        <div className="flex items-center gap-2 font-semibold">
+          <Clock className="h-5 w-5" /> Workflow Timeline
+        </div>
+        <div className="space-y-2">
+          {result.steps_completed.map((step, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <div className="h-8 w-8 rounded-full bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-sm text-amber-200">
+                {i + 1}
+              </div>
+              <div>
+                <div className="font-medium">{step}</div>
+              </div>
             </div>
-
-            <div className="text-sm text-gray-600">
-              <strong>Analysis:</strong> {result.analysis.pricing.reasoning}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Processing Time */}
-      <div className="flex items-center gap-2 text-sm text-gray-500">
-        <Clock className="h-4 w-4" />
-        <span>Analysis completed in {result.total_time.toFixed(2)} seconds</span>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
+

@@ -5,29 +5,28 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAssets } from '@/hooks/useAssets';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import ArchiveActions from '@/components/assets/ArchiveActions';
 import { Shield, Users, Gavel, Coins } from 'lucide-react';
 
 export default function Dashboard() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   
-  // Initialize tab from URL query parameter or default to 'active'
-  const initialTab = (searchParams?.get('tab') === 'archived' ? 'archived' : 'active') as 'active' | 'archived';
-  const [activeTab, setActiveTab] = useState<'active' | 'archived'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
   
   // Get user ID safely
   const userId = user?.id;
   
-  // Update tab when URL changes
+  // Initialize tab from URL query parameter (on mount)
   useEffect(() => {
-    const tab = searchParams?.get('tab');
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
     if (tab === 'archived' || tab === 'active') {
       setActiveTab(tab);
     }
-  }, [searchParams]);
+  }, []);
   
   // Fetch assets with creator filter - only fetches when userId is defined
   // When userId is undefined, useAssets will still work but won't fetch (hasFetched will be false)

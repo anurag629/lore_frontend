@@ -96,7 +96,7 @@ export default function DisputesPage() {
           return dir * a.target_asset.title.localeCompare(b.target_asset.title);
         case 'updated':
         default:
-          return dir * (new Date(a.updated_at || a.created_at).getTime() - new Date(b.updated_at || b.created_at).getTime());
+          return dir * (new Date(a.updated_at || a.raised_at).getTime() - new Date(b.updated_at || b.raised_at).getTime());
       }
     });
     return sorted;
