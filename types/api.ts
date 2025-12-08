@@ -93,6 +93,8 @@ export interface IPAssetListItem {
   commercial_rights: boolean;
   registration_status?: 'pending' | 'registered' | 'failed' | 'retrying';
   registration_error?: string;
+  is_deleted?: boolean;
+  deleted_at?: string | null;
   created_at: string;
 }
 

@@ -258,8 +258,12 @@ export const assetsAPI = {
     is_derivative?: boolean;
     search?: string;
     page?: number;
+    is_deleted?: boolean; // Filter archived assets
+    _t?: number; // Cache-busting timestamp (ignored by backend)
   }) => {
-    const response = await api.get('/api/assets/assets/', { params });
+    // Remove _t from params before sending (backend doesn't need it)
+    const { _t, ...backendParams } = params || {};
+    const response = await api.get('/api/assets/assets/', { params: backendParams });
     return response.data;
   },
 
@@ -321,9 +325,21 @@ export const assetsAPI = {
     return response.data;
   },
 
-  // Delete asset (soft delete)
+  // Delete asset (soft delete / archive)
   deleteAsset: async (id: string) => {
     const response = await api.delete(`/api/assets/assets/${id}/`);
+    return response.data;
+  },
+
+  // Restore archived asset
+  restoreAsset: async (id: string) => {
+    const response = await api.post(`/api/assets/assets/${id}/restore/`);
+    return response.data;
+  },
+
+  // Permanently delete asset (must be archived first)
+  permanentDeleteAsset: async (id: string) => {
+    const response = await api.delete(`/api/assets/assets/${id}/permanent_delete/`);
     return response.data;
   },
 
@@ -531,6 +547,32 @@ export const aiAPI = {
     const response = await api.get('/api/ai/platform-stats/', {
       params: { days }
     });
+    return response.data;
+  },
+
+  // === AI VALIDATION ENDPOINTS (Agent System) ===
+
+  // Run complete pre-mint validation (copyright + quality + pricing)
+  validateAsset: async (assetUuid: string) => {
+    const response = await api.post(`/api/ai/validate/${assetUuid}/`);
+    return response.data;
+  },
+
+  // Run copyright detection only
+  checkCopyright: async (assetUuid: string) => {
+    const response = await api.post(`/api/ai/copyright/${assetUuid}/`);
+    return response.data;
+  },
+
+  // Run quality analysis only
+  analyzeQuality: async (assetUuid: string) => {
+    const response = await api.post(`/api/ai/quality/${assetUuid}/`);
+    return response.data;
+  },
+
+  // Run pricing analysis only
+  analyzePricing: async (assetUuid: string) => {
+    const response = await api.post(`/api/ai/pricing/${assetUuid}/`);
     return response.data;
   },
 };

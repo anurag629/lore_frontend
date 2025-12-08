@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, AlertCircle, Check, Wand2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { useUpdateAsset, useDeleteAsset } from '@/hooks/useAssets';
 import { useEnhanceDescription } from '@/hooks/useAI';
@@ -14,15 +15,17 @@ interface EditAssetModalProps {
   onClose: () => void;
   onSuccess?: () => void;
   asset: IPAsset | null;
+  redirectTo?: string; // Optional redirect path after deletion
 }
 
-export default function EditAssetModal({ isOpen, onClose, onSuccess, asset }: EditAssetModalProps) {
+export default function EditAssetModal({ isOpen, onClose, onSuccess, asset, redirectTo }: EditAssetModalProps) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const router = useRouter();
   const { updateAsset, loading: updating, error: updateError, clearError } = useUpdateAsset();
   const { deleteAsset, loading: deleting, error: deleteError } = useDeleteAsset();
   const { showToast } = useToast();
@@ -91,21 +94,32 @@ export default function EditAssetModal({ isOpen, onClose, onSuccess, asset }: Ed
     }
   };
 
-  // Handle delete
+  // Handle archive (soft delete)
   const handleDelete = async () => {
     if (!asset) return;
 
     const result = await deleteAsset(asset.id);
     if (result) {
-      showToast('Asset deleted successfully', 'success');
-      onSuccess?.();
+      showToast('Asset archived successfully', 'success');
+      setShowDeleteConfirm(false);
       onClose();
-      // Navigate away from the asset page
-      if (typeof window !== 'undefined') {
-        window.location.href = '/explore';
+
+      // Call onSuccess to trigger refetch before navigating
+      if (onSuccess) {
+        onSuccess();
       }
+
+      // Redirect to dashboard Archived tab
+      setTimeout(() => {
+        const timestamp = Date.now();
+        const redirectPath = redirectTo === '/dashboard' 
+          ? `/dashboard?refresh=${timestamp}&archived=${asset.id}&tab=archived` 
+          : redirectTo || `/dashboard?refresh=${timestamp}&archived=${asset.id}&tab=archived`;
+        router.push(redirectPath);
+        router.refresh();
+      }, 100);
     } else {
-      showToast(deleteError || 'Failed to delete asset', 'error');
+      showToast(deleteError || 'Failed to archive asset', 'error');
     }
   };
 
@@ -164,7 +178,7 @@ export default function EditAssetModal({ isOpen, onClose, onSuccess, asset }: Ed
                   <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-red-400 font-medium">Delete Failed</p>
+                      <p className="text-red-400 font-medium">Archive Failed</p>
                       <p className="text-red-300 text-sm mt-1">{deleteError}</p>
                     </div>
                   </div>
@@ -232,26 +246,26 @@ export default function EditAssetModal({ isOpen, onClose, onSuccess, asset }: Ed
                   </p>
                 </div>
 
-                {/* Delete Section */}
+                {/* Archive Section */}
                 {!showDeleteConfirm ? (
                   <div className="pt-4 border-t border-slate-800">
                     <button
                       type="button"
                       onClick={() => setShowDeleteConfirm(true)}
                       disabled={updating || deleting}
-                      className="w-full px-4 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 text-red-400 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 text-amber-400 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Delete Asset
+                      Archive Asset
                     </button>
                   </div>
                 ) : (
                   <div className="pt-4 border-t border-slate-800 space-y-3">
-                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                      <p className="text-sm text-red-300 font-medium mb-2">
-                        Are you sure you want to delete this asset?
+                    <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                      <p className="text-sm text-amber-300 font-medium mb-2">
+                        Are you sure you want to archive this asset?
                       </p>
-                      <p className="text-xs text-red-400">
-                        This action cannot be undone. The asset will be permanently removed from the platform.
+                      <p className="text-xs text-amber-400">
+                        The asset will be moved to the Archived tab. You can restore it later or permanently delete it from there.
                       </p>
                     </div>
                     <div className="flex gap-3">
@@ -272,10 +286,10 @@ export default function EditAssetModal({ isOpen, onClose, onSuccess, asset }: Ed
                         {deleting ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Deleting...
+                            Archiving...
                           </>
                         ) : (
-                          'Confirm Delete'
+                          'Confirm Archive'
                         )}
                       </button>
                     </div>

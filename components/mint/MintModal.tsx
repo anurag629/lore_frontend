@@ -485,7 +485,12 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
                             className="w-4 h-4 rounded border-white/20 bg-slate-800 text-amber-500 focus:ring-amber-500"
                             disabled={loading}
                           />
-                          <span className="text-sm text-slate-300">Allow Derivatives/Remixes</span>
+                          <div className="flex-1">
+                            <span className="text-sm text-slate-300">Allow Derivatives/Remixes</span>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              Others can create new works based on your asset
+                            </p>
+                          </div>
                         </label>
 
                         <label className="flex items-center gap-3 cursor-pointer">
@@ -498,15 +503,38 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
                             className="w-4 h-4 rounded border-white/20 bg-slate-800 text-amber-500 focus:ring-amber-500"
                             disabled={loading}
                           />
-                          <span className="text-sm text-slate-300">
-                            Allow Commercial Use
-                          </span>
+                          <div className="flex-1">
+                            <span className="text-sm text-slate-300">Allow Commercial Use</span>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              Others can use your asset for commercial purposes
+                            </p>
+                          </div>
                         </label>
+                      </div>
+
+                      {/* License Type Indicator */}
+                      <div className="p-3 bg-slate-800/50 rounded-lg border border-white/5">
+                        <p className="text-xs font-medium text-slate-400 mb-1">Selected License:</p>
+                        <p className="text-sm font-semibold text-amber-400">
+                          {formData.commercial_rights && formData.allow_derivatives && 'Commercial Remix License'}
+                          {!formData.commercial_rights && formData.allow_derivatives && 'Non-Commercial Remix License'}
+                          {formData.commercial_rights && !formData.allow_derivatives && 'Commercial Use Only License'}
+                          {!formData.commercial_rights && !formData.allow_derivatives && 'Non-Commercial, No Derivatives'}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {formData.commercial_rights && formData.allow_derivatives && 'Others can remix and use commercially'}
+                          {!formData.commercial_rights && formData.allow_derivatives && 'Others can remix for non-commercial use only'}
+                          {formData.commercial_rights && !formData.allow_derivatives && 'Commercial use allowed, but no derivatives'}
+                          {!formData.commercial_rights && !formData.allow_derivatives && 'No commercial use or derivatives allowed'}
+                        </p>
                       </div>
 
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-300">
                           Royalty Percentage: {formData.royalty_percentage}%
+                          {!formData.commercial_rights && (
+                            <span className="ml-2 text-xs text-slate-500">(Not applicable for non-commercial)</span>
+                          )}
                         </label>
                         <input
                           type="range"
@@ -521,10 +549,12 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
                             })
                           }
                           className="w-full"
-                          disabled={loading}
+                          disabled={loading || !formData.commercial_rights}
                         />
                         <p className="text-xs text-slate-500">
-                          Percentage of revenue you'll earn from derivatives
+                          {formData.commercial_rights
+                            ? 'Percentage of revenue you\'ll earn from commercial use of your asset'
+                            : 'Enable "Allow Commercial Use" to set royalty percentage'}
                         </p>
                       </div>
                     </div>

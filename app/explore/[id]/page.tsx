@@ -929,6 +929,7 @@ export default function AssetDetailPage() {
           refetch();
         }}
         asset={asset}
+        redirectTo="/dashboard"
       />
 
       <ShareModal

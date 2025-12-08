@@ -249,10 +249,11 @@ export default function UserProfilePage() {
     }
   };
 
-  // Fetch user's assets
-  const { assets, loading: assetsLoading } = useAssets({
+  // Fetch user's assets (only active, not archived)
+  const { assets, loading: assetsLoading, refetch } = useAssets({
     creator: profile?.id,
     page: 1,
+    is_deleted: false, // Explicitly filter out archived assets
   });
 
   // Fetch user's favorites

@@ -193,6 +193,88 @@ export interface AIPlatformStats extends AIUsageStats {
   acceptance_rate: number;
 }
 
+// AI Validation Types (Agent System)
+export interface CopyrightAnalysisResult {
+  risk_level: 'low' | 'medium' | 'high';
+  similarity_score: number;
+  is_likely_original: boolean;
+  potential_matches: Array<{
+    asset_id: number;
+    asset_title: string;
+    asset_creator: string;
+    similarity_score: number;
+    match_type: 'image' | 'text';
+    hamming_distance?: number;
+  }>;
+  recommendations: string[];
+  confidence: number;
+  analysis_details?: {
+    total_matches_found: number;
+    image_analysis_performed: boolean;
+    text_analysis_performed: boolean;
+  };
+}
+
+export interface QualityAnalysisResult {
+  overall_score: number;
+  technical_quality: {
+    overall_score: number;
+    has_image: boolean;
+    resolution_score: number;
+    sharpness_score: number;
+    noise_score: number;
+    width?: number;
+    height?: number;
+    megapixels?: number;
+    laplacian_variance?: number;
+    noise_estimate?: number;
+  };
+  description_quality: {
+    overall_score: number;
+    length_score: number;
+    clarity_score: number;
+    seo_score: number;
+    word_count: number;
+    reading_ease?: number;
+  };
+  metadata_completeness: number;
+  market_appeal: number;
+  improvement_suggestions: string[];
+  strengths: string[];
+  confidence: number;
+}
+
+export interface PricingTier {
+  tier: 'conservative' | 'balanced' | 'aggressive';
+  royalty_percentage: number;
+  description: string;
+}
+
+export interface PricingAnalysisResult {
+  suggested_tiers: PricingTier[];
+  market_average: number;
+  similar_assets_count: number;
+  demand_prediction: number;
+  reasoning: string;
+  confidence: number;
+  quality_score_used?: number;
+}
+
+export interface ValidationWorkflowResult {
+  success: boolean;
+  workflow_status: 'pending' | 'running' | 'completed' | 'failed';
+  overall_verdict: 'approved' | 'warning' | 'rejected';
+  steps_completed: string[];
+  warnings: string[];
+  blockers: string[];
+  total_time: number;
+  analysis: {
+    copyright?: CopyrightAnalysisResult;
+    quality?: QualityAnalysisResult;
+    pricing?: PricingAnalysisResult;
+  };
+}
+
 // Comment Types
 export interface Comment {
   id: string;  // UUID

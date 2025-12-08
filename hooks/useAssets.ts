@@ -19,6 +19,7 @@ export function useAssets(params?: {
   is_derivative?: boolean;
   search?: string;
   page?: number;
+  is_deleted?: boolean; // Filter archived assets
 }) {
   const [assets, setAssets] = useState<IPAssetListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -39,6 +40,7 @@ export function useAssets(params?: {
     is_derivative: params?.is_derivative,
     search: params?.search,
     page: params?.page,
+    is_deleted: params?.is_deleted,
   });
 
   // Fetch on mount and when params change
@@ -51,13 +53,23 @@ export function useAssets(params?: {
         setLoading(true);
         setError(null);
         
-        const response: PaginatedResponse<IPAssetListItem> = await assetsAPI.getAssets(params);
+        // Add cache-busting parameter to ensure fresh data (backend ignores _t param)
+        const cacheBustParams = params ? { ...params, _t: Date.now() } : { _t: Date.now() };
+        const response: PaginatedResponse<IPAssetListItem> = await assetsAPI.getAssets(cacheBustParams);
         
         // Only update state if this fetch wasn't cancelled
         if (!isCancelled && isMountedRef.current) {
-          setAssets(response.results || []);
+          // Filter out deleted assets only if we're not viewing archived assets
+          // If is_deleted=true, we want to show archived assets
+          const results = params?.is_deleted
+            ? (response.results || []) // Show all results when viewing archived
+            : (response.results || []).filter(
+                (asset: IPAssetListItem) => !asset.is_deleted
+              ); // Filter out deleted when viewing active
+          
+          setAssets(results);
           setPagination({
-            count: response.count,
+            count: results.length, // Use filtered count
             next: response.next,
             previous: response.previous,
           });
@@ -106,12 +118,25 @@ export function useAssets(params?: {
       setLoading(true);
       setError(null);
       
-      const response: PaginatedResponse<IPAssetListItem> = await assetsAPI.getAssets(params);
+      // Add cache-busting parameter to ensure fresh data
+      const cacheBustParams = {
+        ...params,
+        _t: Date.now(), // Timestamp to bypass any client-side caching
+      };
+      
+      const response: PaginatedResponse<IPAssetListItem> = await assetsAPI.getAssets(cacheBustParams);
       
       if (isMountedRef.current) {
-        setAssets(response.results || []);
+        // Filter out deleted assets only if we're not viewing archived assets
+        const filteredResults = params?.is_deleted
+          ? (response.results || []) // Show all results when viewing archived
+          : (response.results || []).filter(
+              (asset: IPAssetListItem) => !asset.is_deleted
+            ); // Filter out deleted when viewing active
+        
+        setAssets(filteredResults);
         setPagination({
-          count: response.count,
+          count: filteredResults.length, // Use filtered count
           next: response.next,
           previous: response.previous,
         });
@@ -460,7 +485,7 @@ export function useUpdateAsset() {
   };
 }
 
-// Hook to delete asset
+// Hook to delete asset (archive)
 export function useDeleteAsset() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -472,9 +497,9 @@ export function useDeleteAsset() {
       await assetsAPI.deleteAsset(id);
       return true;
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || err.response?.data?.error || 'Failed to delete asset';
+      const errorMessage = err.response?.data?.detail || err.response?.data?.error || 'Failed to archive asset';
       setError(errorMessage);
-      console.error('Error deleting asset:', err);
+      console.error('Error archiving asset:', err);
       return false;
     } finally {
       setLoading(false);
@@ -485,6 +510,68 @@ export function useDeleteAsset() {
 
   return {
     deleteAsset,
+    loading,
+    error,
+    clearError,
+  };
+}
+
+// Hook to restore archived asset
+export function useRestoreAsset() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const restoreAsset = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      setError(null);
+      await assetsAPI.restoreAsset(id);
+      return true;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || err.response?.data?.error || 'Failed to restore asset';
+      setError(errorMessage);
+      console.error('Error restoring asset:', err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const clearError = useCallback(() => setError(null), []);
+
+  return {
+    restoreAsset,
+    loading,
+    error,
+    clearError,
+  };
+}
+
+// Hook to permanently delete asset
+export function usePermanentDeleteAsset() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const permanentDeleteAsset = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      setError(null);
+      await assetsAPI.permanentDeleteAsset(id);
+      return true;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || err.response?.data?.error || 'Failed to permanently delete asset';
+      setError(errorMessage);
+      console.error('Error permanently deleting asset:', err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const clearError = useCallback(() => setError(null), []);
+
+  return {
+    permanentDeleteAsset,
     loading,
     error,
     clearError,
