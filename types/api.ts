@@ -165,3 +165,136 @@ export interface ApiError {
   message?: string;
   [key: string]: any;
 }
+
+// Group IP Types
+export interface GroupIP {
+  uuid: string;
+  story_group_id: string | null;
+  name: string;
+  description: string;
+  creator: Creator;
+  royalty_pool_address: string | null;
+  total_royalty_percentage: number;
+  member_count: number;
+  registration_status: 'pending' | 'registered' | 'failed';
+  registration_transaction_hash: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GroupIPMembership {
+  uuid: string;
+  group: string; // Group UUID
+  asset: IPAssetListItem;
+  revenue_share_percentage: number;
+  is_active: boolean;
+  added_at: string;
+}
+
+export interface GroupIPStatistics {
+  group_uuid: string;
+  member_count: number;
+  total_revenue_share: number;
+  total_royalties_received_wei: string;
+  total_royalties_received_eth: string;
+  distributions_count: number;
+  last_distribution_at: string | null;
+}
+
+export interface GroupRoyaltyDistribution {
+  uuid: string;
+  membership: {
+    asset: IPAssetListItem;
+    revenue_share_percentage: number;
+  };
+  amount_wei: string;
+  amount_eth: string;
+  tx_hash: string;
+  distributed_at: string;
+}
+
+// Dispute Types
+export type DisputeStatus = 'pending' | 'under_review' | 'resolved' | 'cancelled';
+export type DisputeResult = 'upheld' | 'rejected' | 'settled';
+
+export interface Dispute {
+  uuid: string;
+  story_dispute_id: string | null;
+  target_asset: IPAssetListItem;
+  disputer: Creator;
+  reason: string;
+  evidence_ipfs_hash: string | null;
+  status: DisputeStatus;
+  result: DisputeResult | null;
+  resolution_notes: string | null;
+  resolved_by: Creator | null;
+  raise_transaction_hash: string | null;
+  resolve_transaction_hash: string | null;
+  evidence_count: number;
+  raised_at: string;
+  resolved_at: string | null;
+  updated_at: string;
+}
+
+export interface DisputeEvidence {
+  uuid: string;
+  dispute: string; // Dispute UUID
+  submitted_by: Creator;
+  description: string;
+  evidence_url: string | null;
+  evidence_ipfs_hash: string | null;
+  transaction_hash: string | null;
+  submitted_at: string;
+}
+
+export interface DisputeStatistics {
+  total_disputes: number;
+  pending: number;
+  under_review: number;
+  resolved: number;
+  cancelled: number;
+  upheld: number;
+  rejected: number;
+  settled: number;
+}
+
+// Permission Types
+export type PermissionType = 'signer' | 'register_derivative' | 'register_derivative_with_attribution';
+
+export interface IPAccountPermission {
+  uuid: string;
+  asset: IPAssetListItem;
+  permissioned_address: string;
+  permission_type: PermissionType;
+  is_active: boolean;
+  granted_by: Creator;
+  granted_at: string;
+  revoked_at: string | null;
+}
+
+export interface PermissionSummary {
+  asset_uuid: string;
+  permissioned_address: string;
+  permissions: {
+    signer: boolean;
+    register_derivative: boolean;
+    register_derivative_with_attribution: boolean;
+  };
+  active_count: number;
+  total_count: number;
+}
+
+// Multi-Parent Derivative Types
+export interface MultiParentDerivativeData {
+  parent_assets: Array<{
+    asset_uuid: string;
+    attribution_percentage: number;
+  }>;
+  title: string;
+  description: string;
+  media_file?: File;
+  media_url?: string;
+  relationship_type?: 'remix' | 'spin_off' | 'adaptation';
+  commercial_rights: boolean;
+}

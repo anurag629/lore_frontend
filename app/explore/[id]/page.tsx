@@ -26,6 +26,8 @@ import {
   FileText,
   Link2,
   RefreshCw,
+  AlertTriangle,
+  Settings,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -34,6 +36,8 @@ import Button from '@/components/ui/Button';
 import RemixModal from '@/components/mint/RemixModal';
 import EditAssetModal from '@/components/mint/EditAssetModal';
 import ShareModal from '@/components/share/ShareModal';
+import RaiseDisputeModal from '@/components/disputes/RaiseDisputeModal';
+import GrantPermissionModal from '@/components/permissions/GrantPermissionModal';
 import { useToast } from '@/components/ui/Toast';
 import { useClipboard } from '@/hooks/useClipboard';
 import { useToggleFavorite, useIsFavorited } from '@/hooks/useFavorites';
@@ -52,6 +56,8 @@ export default function AssetDetailPage() {
   const [showRemixModal, setShowRemixModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
   const [copiedIpId, setCopiedIpId] = useState(false);
   const { showToast } = useToast();
@@ -729,13 +735,34 @@ export default function AssetDetailPage() {
                 )}
 
                 {isOwner && (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="flex-1 py-3.5 text-base font-semibold"
+                      onClick={() => setShowEditModal(true)}
+                    >
+                      <FileText className="w-5 h-5 mr-2" />
+                      Edit Asset
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 py-3.5 text-base font-semibold"
+                      onClick={() => setShowPermissionModal(true)}
+                    >
+                      <Shield className="w-5 h-5 mr-2" />
+                      Permissions
+                    </Button>
+                  </>
+                )}
+
+                {!isOwner && isAuthenticated && (
                   <Button
                     variant="outline"
-                    className="flex-1 py-3.5 text-base font-semibold"
-                    onClick={() => setShowEditModal(true)}
+                    className="flex-1 py-3.5 text-base font-semibold border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+                    onClick={() => setShowDisputeModal(true)}
                   >
-                    <FileText className="w-5 h-5 mr-2" />
-                    Edit Asset
+                    <AlertTriangle className="w-5 h-5 mr-2" />
+                    Raise Dispute
                   </Button>
                 )}
 
@@ -938,6 +965,32 @@ export default function AssetDetailPage() {
         url={typeof window !== 'undefined' ? window.location.href : ''}
         title={asset.title}
       />
+
+      {/* Raise Dispute Modal */}
+      {asset && (
+        <RaiseDisputeModal
+          isOpen={showDisputeModal}
+          onClose={() => setShowDisputeModal(false)}
+          onSuccess={() => {
+            showToast('Dispute raised successfully!', 'success');
+            refetch();
+          }}
+          targetAsset={asset}
+        />
+      )}
+
+      {/* Grant Permission Modal */}
+      {asset && (
+        <GrantPermissionModal
+          isOpen={showPermissionModal}
+          onClose={() => setShowPermissionModal(false)}
+          onSuccess={() => {
+            showToast('Permissions granted successfully!', 'success');
+            refetch();
+          }}
+          assetUuid={asset.id}
+        />
+      )}
     </div>
   );
 }

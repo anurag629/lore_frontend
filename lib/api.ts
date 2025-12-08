@@ -283,9 +283,19 @@ export const assetsAPI = {
     return response.data;
   },
 
-  // Create derivative of an existing asset
+  // Create derivative of an existing asset (single parent)
   createDerivative: async (data: FormData) => {
     const response = await api.post('/api/assets/assets/create_derivative/', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Create multi-parent derivative
+  createMultiParentDerivative: async (data: FormData) => {
+    const response = await api.post('/api/assets/assets/create_multi_parent_derivative/', data, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -573,6 +583,258 @@ export const aiAPI = {
   // Run pricing analysis only
   analyzePricing: async (assetUuid: string) => {
     const response = await api.post(`/api/ai/pricing/${assetUuid}/`);
+    return response.data;
+  },
+};
+
+// Group IP API endpoints
+export const groupsAPI = {
+  // Get list of groups
+  getGroups: async (params?: {
+    creator?: string; // wallet address
+    is_active?: boolean;
+    registration_status?: 'pending' | 'registered' | 'failed';
+  }) => {
+    const response = await api.get('/api/assets/groups/', { params });
+    return response.data;
+  },
+
+  // Get single group by UUID
+  getGroup: async (id: string) => {
+    const response = await api.get(`/api/assets/groups/${id}/`);
+    return response.data;
+  },
+
+  // Create new group
+  createGroup: async (data: {
+    name: string;
+    description: string;
+    total_royalty_percentage: number;
+  }) => {
+    const response = await api.post('/api/assets/groups/', data);
+    return response.data;
+  },
+
+  // Update group
+  updateGroup: async (id: string, data: {
+    name?: string;
+    description?: string;
+    total_royalty_percentage?: number;
+  }) => {
+    const response = await api.patch(`/api/assets/groups/${id}/`, data);
+    return response.data;
+  },
+
+  // Deactivate group
+  deleteGroup: async (id: string) => {
+    const response = await api.delete(`/api/assets/groups/${id}/`);
+    return response.data;
+  },
+
+  // Register group on blockchain
+  registerGroup: async (id: string, creatorAddress?: string) => {
+    const response = await api.post(`/api/assets/groups/${id}/register/`, {
+      creator_address: creatorAddress,
+    });
+    return response.data;
+  },
+
+  // Add member to group
+  addMember: async (id: string, data: {
+    asset_uuid: string;
+    revenue_share_percentage: number;
+  }) => {
+    const response = await api.post(`/api/assets/groups/${id}/add_member/`, data);
+    return response.data;
+  },
+
+  // Remove member from group
+  removeMember: async (id: string, data: {
+    asset_uuid: string;
+  }) => {
+    const response = await api.post(`/api/assets/groups/${id}/remove_member/`, data);
+    return response.data;
+  },
+
+  // Get group statistics
+  getStatistics: async (id: string) => {
+    const response = await api.get(`/api/assets/groups/${id}/statistics/`);
+    return response.data;
+  },
+
+  // Get group distributions
+  getDistributions: async (id: string) => {
+    const response = await api.get(`/api/assets/groups/${id}/distributions/`);
+    return response.data;
+  },
+};
+
+// Dispute API endpoints
+export const disputesAPI = {
+  // Get list of disputes
+  getDisputes: async (params?: {
+    target_asset?: string; // UUID
+    disputer?: string; // wallet address
+    status?: 'pending' | 'under_review' | 'resolved' | 'cancelled';
+    result?: 'upheld' | 'rejected' | 'settled';
+  }) => {
+    const response = await api.get('/api/assets/disputes/', { params });
+    return response.data;
+  },
+
+  // Get single dispute by UUID
+  getDispute: async (id: string) => {
+    const response = await api.get(`/api/assets/disputes/${id}/`);
+    return response.data;
+  },
+
+  // Raise a new dispute
+  raiseDispute: async (data: {
+    target_asset_uuid: string;
+    reason: string;
+    evidence_description?: string;
+    evidence_url?: string;
+  }) => {
+    const response = await api.post('/api/assets/disputes/raise_dispute/', data);
+    return response.data;
+  },
+
+  // Submit evidence
+  submitEvidence: async (id: string, data: {
+    description: string;
+    evidence_url?: string;
+  }) => {
+    const response = await api.post(`/api/assets/disputes/${id}/submit_evidence/`, data);
+    return response.data;
+  },
+
+  // Resolve dispute (admin only)
+  resolveDispute: async (id: string, data: {
+    result: 'upheld' | 'rejected' | 'settled';
+    resolution_notes: string;
+  }) => {
+    const response = await api.post(`/api/assets/disputes/${id}/resolve/`, data);
+    return response.data;
+  },
+
+  // Cancel dispute (disputer only)
+  cancelDispute: async (id: string) => {
+    const response = await api.post(`/api/assets/disputes/${id}/cancel/`);
+    return response.data;
+  },
+
+  // Get dispute evidence
+  getEvidence: async (id: string) => {
+    const response = await api.get(`/api/assets/disputes/${id}/evidence/`);
+    return response.data;
+  },
+
+  // Get dispute statistics
+  getStatistics: async () => {
+    const response = await api.get('/api/assets/disputes/statistics/');
+    return response.data;
+  },
+};
+
+// Permissions API endpoints
+export const permissionsAPI = {
+  // List permissions for user's assets
+  getPermissions: async (params?: {
+    asset_uuid?: string;
+    permissioned_address?: string;
+    permission_type?: 'signer' | 'register_derivative' | 'register_derivative_with_attribution';
+    is_active?: boolean;
+  }) => {
+    const response = await api.get('/api/assets/permissions/', { params });
+    return response.data;
+  },
+
+  // Get permission details
+  getPermission: async (id: string) => {
+    const response = await api.get(`/api/assets/permissions/${id}/`);
+    return response.data;
+  },
+
+  // Set a single permission
+  setPermission: async (data: {
+    asset_uuid: string;
+    permissioned_address: string;
+    permission_type: 'signer' | 'register_derivative' | 'register_derivative_with_attribution';
+  }) => {
+    const response = await api.post('/api/assets/permissions/set_permission/', data);
+    return response.data;
+  },
+
+  // Set all permissions
+  setAllPermissions: async (data: {
+    asset_uuid: string;
+    permissioned_address: string;
+    permissions: {
+      signer: boolean;
+      register_derivative: boolean;
+      register_derivative_with_attribution: boolean;
+    };
+  }) => {
+    const response = await api.post('/api/assets/permissions/set_all_permissions/', data);
+    return response.data;
+  },
+
+  // Revoke a permission
+  revokePermission: async (data: {
+    asset_uuid: string;
+    permissioned_address: string;
+    permission_type: 'signer' | 'register_derivative' | 'register_derivative_with_attribution';
+  }) => {
+    const response = await api.post('/api/assets/permissions/revoke_permission/', data);
+    return response.data;
+  },
+
+  // Revoke all permissions
+  revokeAllPermissions: async (data: {
+    asset_uuid: string;
+    permissioned_address: string;
+  }) => {
+    const response = await api.post('/api/assets/permissions/revoke_all_permissions/', data);
+    return response.data;
+  },
+
+  // Get permissions for an asset
+  getPermissionsForAsset: async (assetUuid: string) => {
+    const response = await api.get('/api/assets/permissions/for_asset/', {
+      params: { asset_uuid: assetUuid },
+    });
+    return response.data;
+  },
+
+  // Check if address has permission
+  checkPermission: async (params: {
+    asset_uuid: string;
+    permissioned_address: string;
+    permission_type: 'signer' | 'register_derivative' | 'register_derivative_with_attribution';
+  }) => {
+    const response = await api.get('/api/assets/permissions/check_permission/', { params });
+    return response.data;
+  },
+
+  // Get permission summary
+  getPermissionSummary: async (params: {
+    asset_uuid: string;
+    permissioned_address: string;
+  }) => {
+    const response = await api.get('/api/assets/permissions/permission_summary/', { params });
+    return response.data;
+  },
+};
+
+// Multi-parent derivative endpoint
+export const multiParentDerivativeAPI = {
+  // Create derivative with multiple parents
+  createMultiParentDerivative: async (data: FormData) => {
+    const response = await api.post('/api/assets/assets/create_multi_parent_derivative/', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 };
