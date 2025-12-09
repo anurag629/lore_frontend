@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
-import { useSetAllPermissions } from '@/hooks/usePermissions';
+import { useSetSelectedPermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/components/ui/Toast';
 import type { PermissionType } from '@/types/api';
 
@@ -21,28 +21,35 @@ export default function GrantPermissionModal({
   onSuccess,
   assetUuid,
 }: GrantPermissionModalProps) {
-  const [permissionedAddress, setPermissionedAddress] = useState('');
+  const [granteeAddress, setGranteeAddress] = useState('');
   const [permissions, setPermissions] = useState({
-    signer: false,
+    execute: false,
+    transfer_erc20: false,
+    set_metadata: false,
+    attach_license: false,
     register_derivative: false,
-    register_derivative_with_attribution: false,
+    collect_royalty: false,
   });
 
-  const { setAllPermissions, loading, error, clearError } = useSetAllPermissions();
+  const { setSelectedPermissions, loading, error, clearError } = useSetSelectedPermissions();
   const { showToast } = useToast();
 
-  // Reset form when modal opens/closes
+  // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setPermissionedAddress('');
+      setGranteeAddress('');
       setPermissions({
-        signer: false,
+        execute: false,
+        transfer_erc20: false,
+        set_metadata: false,
+        attach_license: false,
         register_derivative: false,
-        register_derivative_with_attribution: false,
+        collect_royalty: false,
       });
       clearError();
     }
-  }, [isOpen, clearError]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]); // Only reset when modal opens, not when clearError changes
 
   // Validate Ethereum address
   const isValidAddress = (address: string) => {
@@ -52,12 +59,12 @@ export default function GrantPermissionModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!permissionedAddress.trim()) {
+    if (!granteeAddress.trim()) {
       showToast('Please enter an Ethereum address', 'error');
       return;
     }
 
-    if (!isValidAddress(permissionedAddress)) {
+    if (!isValidAddress(granteeAddress)) {
       showToast('Invalid Ethereum address format', 'error');
       return;
     }
@@ -68,9 +75,9 @@ export default function GrantPermissionModal({
       return;
     }
 
-    const result = await setAllPermissions({
-      asset_uuid: assetUuid,
-      permissioned_address: permissionedAddress.toLowerCase(),
+    const result = await setSelectedPermissions({
+      asset_id: assetUuid,
+      grantee_address: granteeAddress.toLowerCase(),
       permissions,
     });
 
@@ -85,19 +92,34 @@ export default function GrantPermissionModal({
 
   const permissionTypes = [
     {
-      key: 'signer' as const,
-      label: 'Signer',
-      description: 'Can sign transactions on behalf of the IP asset',
+      key: 'execute' as const,
+      label: 'Execute Transactions',
+      description: 'Can execute transactions on behalf of the IP asset',
+    },
+    {
+      key: 'transfer_erc20' as const,
+      label: 'Transfer ERC20',
+      description: 'Can transfer ERC20 tokens from the IP account',
+    },
+    {
+      key: 'set_metadata' as const,
+      label: 'Set Metadata',
+      description: 'Can modify the metadata of this IP asset',
+    },
+    {
+      key: 'attach_license' as const,
+      label: 'Attach License',
+      description: 'Can attach new license terms to this IP asset',
     },
     {
       key: 'register_derivative' as const,
-      label: 'Register Derivative',
-      description: 'Can register derivatives of this IP asset',
+      label: 'Register Derivatives',
+      description: 'Can register new derivatives of this IP asset',
     },
     {
-      key: 'register_derivative_with_attribution' as const,
-      label: 'Register Derivative with Attribution',
-      description: 'Can register derivatives with proper attribution',
+      key: 'collect_royalty' as const,
+      label: 'Collect Royalties',
+      description: 'Can collect royalty payments on behalf of this IP',
     },
   ];
 
@@ -119,10 +141,12 @@ export default function GrantPermissionModal({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div
+              className="bg-slate-900 rounded-2xl border border-slate-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl pointer-events-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Header */}
               <div className="sticky top-0 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800 p-6 flex items-center justify-between z-10">
                 <div className="flex items-center gap-3">
@@ -162,13 +186,13 @@ export default function GrantPermissionModal({
                   <input
                     id="address"
                     type="text"
-                    value={permissionedAddress}
-                    onChange={(e) => setPermissionedAddress(e.target.value)}
+                    value={granteeAddress}
+                    onChange={(e) => setGranteeAddress(e.target.value)}
                     placeholder="0x..."
                     className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono text-sm"
                     required
                   />
-                  {permissionedAddress && !isValidAddress(permissionedAddress) && (
+                  {granteeAddress && !isValidAddress(granteeAddress) && (
                     <p className="text-xs text-red-400 mt-1">Invalid Ethereum address format</p>
                   )}
                 </div>
@@ -228,7 +252,7 @@ export default function GrantPermissionModal({
                     type="submit"
                     variant="primary"
                     className="flex-1"
-                    disabled={loading || !isValidAddress(permissionedAddress) || !Object.values(permissions).some(Boolean)}
+                    disabled={loading || !isValidAddress(granteeAddress) || !Object.values(permissions).some(Boolean)}
                   >
                     {loading ? (
                       <>

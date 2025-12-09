@@ -80,10 +80,9 @@ export function useRaiseDispute() {
   const [error, setError] = useState<string | null>(null);
 
   const raiseDispute = useCallback(async (data: {
-    target_asset_uuid: string;
+    asset_id: string;
     reason: string;
-    evidence_description?: string;
-    evidence_url?: string;
+    evidence_hash?: string;
   }): Promise<Dispute | null> => {
     try {
       setLoading(true);

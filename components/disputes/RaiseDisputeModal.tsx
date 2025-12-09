@@ -56,10 +56,8 @@ export default function RaiseDisputeModal({
     }
 
     const result = await raiseDispute({
-      target_asset_uuid: targetAsset.id,
+      asset_id: targetAsset.id,
       reason: formData.reason,
-      evidence_description: formData.evidence_description || undefined,
-      evidence_url: formData.evidence_url || undefined,
     });
 
     if (result) {

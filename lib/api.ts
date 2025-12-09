@@ -721,10 +721,9 @@ export const disputesAPI = {
 
   // Raise a new dispute
   raiseDispute: async (data: {
-    target_asset_uuid: string;
+    asset_id: string;
     reason: string;
-    evidence_description?: string;
-    evidence_url?: string;
+    evidence_hash?: string;
   }) => {
     const response = await api.post('/api/assets/disputes/raise_dispute/', data);
     return response.data;
@@ -771,40 +770,41 @@ export const disputesAPI = {
 export const permissionsAPI = {
   // List permissions for user's assets
   getPermissions: async (params?: {
-    asset_uuid?: string;
-    permissioned_address?: string;
-    permission_type?: 'signer' | 'register_derivative' | 'register_derivative_with_attribution';
-    is_active?: boolean;
+    asset?: string;
+    grantee?: string;
+    type?: 'execute' | 'transfer_erc20' | 'set_metadata' | 'attach_license' | 'register_derivative' | 'collect_royalty';
+    active_only?: boolean;
   }) => {
     const response = await api.get('/api/assets/permissions/', { params });
     return response.data;
   },
 
   // Get permission details
-  getPermission: async (id: string) => {
-    const response = await api.get(`/api/assets/permissions/${id}/`);
+  getPermission: async (uuid: string) => {
+    const response = await api.get(`/api/assets/permissions/${uuid}/`);
     return response.data;
   },
 
   // Set a single permission
   setPermission: async (data: {
-    asset_uuid: string;
-    permissioned_address: string;
-    permission_type: 'signer' | 'register_derivative' | 'register_derivative_with_attribution';
+    asset_id: string;
+    grantee_address: string;
+    permission_type: 'execute' | 'transfer_erc20' | 'set_metadata' | 'attach_license' | 'register_derivative' | 'collect_royalty';
+    is_granted?: boolean;
+    expires_at?: string;
+    notes?: string;
   }) => {
     const response = await api.post('/api/assets/permissions/set_permission/', data);
     return response.data;
   },
 
-  // Set all permissions
+  // Set all permissions (grant or revoke all at once)
   setAllPermissions: async (data: {
-    asset_uuid: string;
-    permissioned_address: string;
-    permissions: {
-      signer: boolean;
-      register_derivative: boolean;
-      register_derivative_with_attribution: boolean;
-    };
+    asset_id: string;
+    grantee_address: string;
+    is_granted?: boolean;
+    expires_at?: string;
+    notes?: string;
   }) => {
     const response = await api.post('/api/assets/permissions/set_all_permissions/', data);
     return response.data;
@@ -812,9 +812,9 @@ export const permissionsAPI = {
 
   // Revoke a permission
   revokePermission: async (data: {
-    asset_uuid: string;
-    permissioned_address: string;
-    permission_type: 'signer' | 'register_derivative' | 'register_derivative_with_attribution';
+    asset_id: string;
+    grantee_address: string;
+    permission_type: 'execute' | 'transfer_erc20' | 'set_metadata' | 'attach_license' | 'register_derivative' | 'collect_royalty';
   }) => {
     const response = await api.post('/api/assets/permissions/revoke_permission/', data);
     return response.data;
@@ -822,26 +822,26 @@ export const permissionsAPI = {
 
   // Revoke all permissions
   revokeAllPermissions: async (data: {
-    asset_uuid: string;
-    permissioned_address: string;
+    asset_id: string;
+    grantee_address: string;
   }) => {
     const response = await api.post('/api/assets/permissions/revoke_all_permissions/', data);
     return response.data;
   },
 
   // Get permissions for an asset
-  getPermissionsForAsset: async (assetUuid: string) => {
+  getPermissionsForAsset: async (assetId: string) => {
     const response = await api.get('/api/assets/permissions/for_asset/', {
-      params: { asset_uuid: assetUuid },
+      params: { asset_id: assetId },
     });
     return response.data;
   },
 
   // Check if address has permission
   checkPermission: async (params: {
-    asset_uuid: string;
-    permissioned_address: string;
-    permission_type: 'signer' | 'register_derivative' | 'register_derivative_with_attribution';
+    asset_id: string;
+    grantee_address: string;
+    permission_type: 'execute' | 'transfer_erc20' | 'set_metadata' | 'attach_license' | 'register_derivative' | 'collect_royalty';
   }) => {
     const response = await api.get('/api/assets/permissions/check_permission/', { params });
     return response.data;
@@ -849,8 +849,8 @@ export const permissionsAPI = {
 
   // Get permission summary
   getPermissionSummary: async (params: {
-    asset_uuid: string;
-    permissioned_address: string;
+    asset_id: string;
+    grantee_address: string;
   }) => {
     const response = await api.get('/api/assets/permissions/permission_summary/', { params });
     return response.data;

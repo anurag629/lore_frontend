@@ -12,10 +12,10 @@ import type {
 
 // Hook to fetch permissions
 export function usePermissions(params?: {
-  asset_uuid?: string;
-  permissioned_address?: string;
-  permission_type?: PermissionType;
-  is_active?: boolean;
+  asset?: string;
+  grantee?: string;
+  type?: PermissionType;
+  active_only?: boolean;
 }) {
   const [permissions, setPermissions] = useState<IPAccountPermission[]>([]);
   const [loading, setLoading] = useState(false);
@@ -45,18 +45,18 @@ export function usePermissions(params?: {
 }
 
 // Hook to get permissions for an asset
-export function useAssetPermissions(assetUuid: string | null) {
+export function useAssetPermissions(assetId: string | null) {
   const [permissions, setPermissions] = useState<IPAccountPermission[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPermissions = useCallback(async () => {
-    if (!assetUuid) return;
+    if (!assetId) return;
     try {
       setLoading(true);
       setError(null);
-      const response: PaginatedResponse<IPAccountPermission> = await permissionsAPI.getPermissionsForAsset(assetUuid);
-      setPermissions(response.results || []);
+      const response = await permissionsAPI.getPermissionsForAsset(assetId);
+      setPermissions(response.permissions || []);
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.response?.data?.error || 'Failed to fetch permissions';
       setError(errorMessage);
@@ -64,7 +64,7 @@ export function useAssetPermissions(assetUuid: string | null) {
     } finally {
       setLoading(false);
     }
-  }, [assetUuid]);
+  }, [assetId]);
 
   return {
     permissions,
@@ -80,9 +80,12 @@ export function useSetPermission() {
   const [error, setError] = useState<string | null>(null);
 
   const setPermission = useCallback(async (data: {
-    asset_uuid: string;
-    permissioned_address: string;
+    asset_id: string;
+    grantee_address: string;
     permission_type: PermissionType;
+    is_granted?: boolean;
+    expires_at?: string;
+    notes?: string;
   }): Promise<boolean> => {
     try {
       setLoading(true);
@@ -107,19 +110,78 @@ export function useSetPermission() {
   };
 }
 
-// Hook to set all permissions
+// Hook to set multiple selected permissions
+export function useSetSelectedPermissions() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const setSelectedPermissions = useCallback(async (data: {
+    asset_id: string;
+    grantee_address: string;
+    permissions: {
+      execute: boolean;
+      transfer_erc20: boolean;
+      set_metadata: boolean;
+      attach_license: boolean;
+      register_derivative: boolean;
+      collect_royalty: boolean;
+    };
+    notes?: string;
+  }): Promise<boolean> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Set each permission individually based on selection
+      const permissionTypes: PermissionType[] = [
+        'execute', 'transfer_erc20', 'set_metadata',
+        'attach_license', 'register_derivative', 'collect_royalty'
+      ];
+
+      for (const permType of permissionTypes) {
+        if (data.permissions[permType]) {
+          await permissionsAPI.setPermission({
+            asset_id: data.asset_id,
+            grantee_address: data.grantee_address,
+            permission_type: permType,
+            is_granted: true,
+            notes: data.notes,
+          });
+        }
+      }
+
+      return true;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || err.response?.data?.error || 'Failed to set permissions';
+      setError(errorMessage);
+      console.error('Error setting permissions:', err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const clearError = useCallback(() => setError(null), []);
+
+  return {
+    setSelectedPermissions,
+    loading,
+    error,
+    clearError,
+  };
+}
+
+// Hook to set all permissions (grant or revoke all at once)
 export function useSetAllPermissions() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const setAllPermissions = useCallback(async (data: {
-    asset_uuid: string;
-    permissioned_address: string;
-    permissions: {
-      signer: boolean;
-      register_derivative: boolean;
-      register_derivative_with_attribution: boolean;
-    };
+    asset_id: string;
+    grantee_address: string;
+    is_granted?: boolean;
+    expires_at?: string;
+    notes?: string;
   }): Promise<boolean> => {
     try {
       setLoading(true);
@@ -150,8 +212,8 @@ export function useRevokePermission() {
   const [error, setError] = useState<string | null>(null);
 
   const revokePermission = useCallback(async (data: {
-    asset_uuid: string;
-    permissioned_address: string;
+    asset_id: string;
+    grantee_address: string;
     permission_type: PermissionType;
   }): Promise<boolean> => {
     try {
@@ -183,8 +245,8 @@ export function useRevokeAllPermissions() {
   const [error, setError] = useState<string | null>(null);
 
   const revokeAllPermissions = useCallback(async (data: {
-    asset_uuid: string;
-    permissioned_address: string;
+    asset_id: string;
+    grantee_address: string;
   }): Promise<boolean> => {
     try {
       setLoading(true);
@@ -215,8 +277,8 @@ export function useCheckPermission() {
   const [error, setError] = useState<string | null>(null);
 
   const checkPermission = useCallback(async (params: {
-    asset_uuid: string;
-    permissioned_address: string;
+    asset_id: string;
+    grantee_address: string;
     permission_type: PermissionType;
   }): Promise<{ has_permission: boolean; permission?: IPAccountPermission } | null> => {
     try {
@@ -243,19 +305,19 @@ export function useCheckPermission() {
 }
 
 // Hook to get permission summary
-export function usePermissionSummary(assetUuid: string | null, permissionedAddress: string | null) {
+export function usePermissionSummary(assetId: string | null, granteeAddress: string | null) {
   const [summary, setSummary] = useState<PermissionSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchSummary = useCallback(async () => {
-    if (!assetUuid || !permissionedAddress) return;
+    if (!assetId || !granteeAddress) return;
     try {
       setLoading(true);
       setError(null);
       const data: PermissionSummary = await permissionsAPI.getPermissionSummary({
-        asset_uuid: assetUuid,
-        permissioned_address: permissionedAddress,
+        asset_id: assetId,
+        grantee_address: granteeAddress,
       });
       setSummary(data);
     } catch (err: any) {
@@ -265,7 +327,7 @@ export function usePermissionSummary(assetUuid: string | null, permissionedAddre
     } finally {
       setLoading(false);
     }
-  }, [assetUuid, permissionedAddress]);
+  }, [assetId, granteeAddress]);
 
   return {
     summary,

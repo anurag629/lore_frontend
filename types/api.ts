@@ -266,26 +266,34 @@ export interface DisputeStatistics {
 }
 
 // Permission Types
-export type PermissionType = 'signer' | 'register_derivative' | 'register_derivative_with_attribution';
+export type PermissionType = 'execute' | 'transfer_erc20' | 'set_metadata' | 'attach_license' | 'register_derivative' | 'collect_royalty';
 
 export interface IPAccountPermission {
   uuid: string;
   asset: IPAssetListItem;
-  permissioned_address: string;
+  grantee_address: string;
   permission_type: PermissionType;
+  is_granted: boolean;
   is_active: boolean;
   granted_by: Creator;
-  granted_at: string;
-  revoked_at: string | null;
+  expires_at: string | null;
+  notes: string;
+  transaction_hash: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PermissionSummary {
-  asset_uuid: string;
-  permissioned_address: string;
+  asset_id: string;
+  asset_title: string;
+  grantee_address: string;
   permissions: {
-    signer: boolean;
+    execute: boolean;
+    transfer_erc20: boolean;
+    set_metadata: boolean;
+    attach_license: boolean;
     register_derivative: boolean;
-    register_derivative_with_attribution: boolean;
+    collect_royalty: boolean;
   };
   active_count: number;
   total_count: number;

@@ -110,13 +110,13 @@ export default function EditAssetModal({ isOpen, onClose, onSuccess, asset, redi
       }
 
       // Redirect to dashboard Archived tab
+      // Note: router.refresh() removed - URL params with timestamp already trigger refetch in dashboard
       setTimeout(() => {
         const timestamp = Date.now();
-        const redirectPath = redirectTo === '/dashboard' 
-          ? `/dashboard?refresh=${timestamp}&archived=${asset.id}&tab=archived` 
+        const redirectPath = redirectTo === '/dashboard'
+          ? `/dashboard?refresh=${timestamp}&archived=${asset.id}&tab=archived`
           : redirectTo || `/dashboard?refresh=${timestamp}&archived=${asset.id}&tab=archived`;
         router.push(redirectPath);
-        router.refresh();
       }, 100);
     } else {
       showToast(deleteError || 'Failed to archive asset', 'error');

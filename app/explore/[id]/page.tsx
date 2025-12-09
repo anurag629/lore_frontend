@@ -27,17 +27,16 @@ import {
   Link2,
   RefreshCw,
   AlertTriangle,
-  Settings,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import RemixModal from '@/components/mint/RemixModal';
 import EditAssetModal from '@/components/mint/EditAssetModal';
 import ShareModal from '@/components/share/ShareModal';
 import RaiseDisputeModal from '@/components/disputes/RaiseDisputeModal';
-import GrantPermissionModal from '@/components/permissions/GrantPermissionModal';
+import PermissionsModal from '@/components/permissions/PermissionsModal';
 import { useToast } from '@/components/ui/Toast';
 import { useClipboard } from '@/hooks/useClipboard';
 import { useToggleFavorite, useIsFavorited } from '@/hooks/useFavorites';
@@ -74,6 +73,11 @@ export default function AssetDetailPage() {
   
   // Retry creation
   const { retryCreation, loading: retrying, error: retryError } = useRetryCreation();
+
+  // Polling state for registration status
+  const [isPolling, setIsPolling] = useState(false);
+  const pollCountRef = useRef(0);
+  const MAX_POLL_ATTEMPTS = 60; // Stop after 3 minutes (60 * 3s)
 
   // Format wallet address for display
   const formatAddress = (address: string | null | undefined) => {
@@ -148,15 +152,42 @@ export default function AssetDetailPage() {
     }
   };
 
-  // Auto-refresh if asset is retrying
+  // Auto-refresh if asset is retrying or pending (with limits to prevent infinite polling)
   useEffect(() => {
-    if (asset?.registration_status === 'retrying') {
-      const interval = setInterval(() => {
-        refetch();
-      }, 3000); // Check every 3 seconds
-      return () => clearInterval(interval);
+    // Only poll if status is 'retrying' or 'pending' with incomplete step
+    const shouldPoll = asset?.registration_status === 'retrying' ||
+      (asset?.registration_status === 'pending' && asset?.creation_step !== 'completed');
+
+    if (!shouldPoll) {
+      setIsPolling(false);
+      pollCountRef.current = 0;
+      return;
     }
-  }, [asset?.registration_status, refetch]);
+
+    // Stop polling after max attempts to prevent infinite loops
+    if (pollCountRef.current >= MAX_POLL_ATTEMPTS) {
+      setIsPolling(false);
+      console.log('Polling stopped: max attempts reached (3 minutes)');
+      return;
+    }
+
+    setIsPolling(true);
+    const interval = setInterval(() => {
+      pollCountRef.current += 1;
+      refetch();
+
+      // Stop if we've reached max attempts
+      if (pollCountRef.current >= MAX_POLL_ATTEMPTS) {
+        clearInterval(interval);
+        setIsPolling(false);
+      }
+    }, 3000); // Check every 3 seconds
+
+    return () => {
+      clearInterval(interval);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [asset?.registration_status, asset?.creation_step]); // Intentionally exclude refetch to prevent interval restart
 
   // Enhanced loading state
   if (loading) {
@@ -329,6 +360,17 @@ export default function AssetDetailPage() {
                         </motion.div>
                       )}
                       {getStatusBadge()}
+                      {/* Polling indicator */}
+                      {isPolling && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="bg-slate-900/80 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg border border-amber-500/30"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5 text-amber-400 animate-spin" />
+                          <span className="text-amber-400 text-xs font-medium">Checking status...</span>
+                        </motion.div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -979,16 +1021,14 @@ export default function AssetDetailPage() {
         />
       )}
 
-      {/* Grant Permission Modal */}
+      {/* Permissions Modal */}
       {asset && (
-        <GrantPermissionModal
+        <PermissionsModal
           isOpen={showPermissionModal}
           onClose={() => setShowPermissionModal(false)}
-          onSuccess={() => {
-            showToast('Permissions granted successfully!', 'success');
-            refetch();
-          }}
-          assetUuid={asset.id}
+          onSuccess={() => refetch()}
+          assetId={asset.id}
+          assetTitle={asset.title}
         />
       )}
     </div>
