@@ -2,131 +2,100 @@
 
 import { cn } from '@/lib/utils';
 
-export function Skeleton({ className }: { className?: string }) {
+interface SkeletonProps {
+  className?: string;
+  variant?: 'text' | 'circular' | 'rectangular';
+  width?: string | number;
+  height?: string | number;
+}
+
+export default function Skeleton({ 
+  className, 
+  variant = 'rectangular',
+  width,
+  height 
+}: SkeletonProps) {
+  const variantStyles = {
+    text: 'h-4 rounded',
+    circular: 'rounded-full',
+    rectangular: 'rounded-lg',
+  };
+
+  const style: React.CSSProperties = {
+    width: width || '100%',
+    height: height || (variant === 'text' ? '1rem' : '100%'),
+  };
+
   return (
     <div
-      className={cn(
-        "animate-pulse rounded-md bg-slate-800",
-        className
-      )}
+      className={cn('skeleton', variantStyles[variant], className)}
+      style={style}
     />
   );
 }
 
-export function AssetCardSkeleton() {
+export function SkeletonCard() {
   return (
-    <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden animate-pulse">
-      <div className="h-48 bg-slate-800" />
-      <div className="p-4 space-y-3">
-        <div className="h-4 bg-slate-800 rounded w-3/4" />
-        <div className="h-3 bg-slate-800 rounded w-full" />
-        <div className="h-3 bg-slate-800 rounded w-2/3" />
-        <div className="flex items-center gap-2 mt-4">
-          <div className="w-8 h-8 bg-slate-800 rounded-full" />
-          <div className="h-3 bg-slate-800 rounded w-24" />
+    <div className="glass rounded-xl p-6 space-y-4">
+      <Skeleton variant="rectangular" height={200} />
+      <div className="space-y-2">
+        <Skeleton variant="text" width="80%" />
+        <Skeleton variant="text" width="60%" />
+      </div>
+      <div className="flex items-center gap-3">
+        <Skeleton variant="circular" width={40} height={40} />
+        <div className="flex-1 space-y-2">
+          <Skeleton variant="text" width="40%" />
+          <Skeleton variant="text" width="30%" />
         </div>
       </div>
     </div>
   );
 }
 
-export function DashboardSkeleton() {
+export function AssetCardSkeleton() {  return (    <div className="glass rounded-xl overflow-hidden">      <Skeleton variant="rectangular" height={250} className="w-full" />      <div className="p-4 space-y-3">        <Skeleton variant="text" width="80%" height={24} />        <Skeleton variant="text" width="60%" />        <div className="flex items-center justify-between mt-4">          <div className="flex items-center gap-2">            <Skeleton variant="circular" width={32} height={32} />            <Skeleton variant="text" width={80} />          </div>          <Skeleton variant="text" width={60} />        </div>      </div>    </div>  );}
+export function SkeletonAssetGrid() {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-slate-900 p-6 rounded-xl border border-slate-800 animate-pulse">
-            <div className="h-12 w-12 bg-slate-800 rounded-lg mb-4" />
-            <div className="h-8 bg-slate-800 rounded w-1/2 mb-2" />
-            <div className="h-4 bg-slate-800 rounded w-3/4" />
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {[...Array(2)].map((_, i) => (
-          <div key={i} className="bg-slate-900 p-6 rounded-xl border border-slate-800 animate-pulse">
-            <div className="h-6 bg-slate-800 rounded w-1/3 mb-4" />
-            <div className="h-64 bg-slate-800 rounded" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function AssetDetailSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-        {/* Media Skeleton */}
-        <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden animate-pulse">
-          <div className="aspect-video bg-slate-800" />
-        </div>
-        
-        {/* Details Skeleton */}
-        <div className="space-y-6">
-          <div>
-            <div className="h-10 bg-slate-800 rounded w-3/4 mb-4" />
-            <div className="h-4 bg-slate-800 rounded w-full mb-2" />
-            <div className="h-4 bg-slate-800 rounded w-5/6" />
-          </div>
-          
-          <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 animate-pulse">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-slate-800 rounded-full" />
-              <div className="flex-1">
-                <div className="h-4 bg-slate-800 rounded w-1/3 mb-2" />
-                <div className="h-3 bg-slate-800 rounded w-1/2" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="bg-slate-900 rounded-xl border border-slate-800 p-4 animate-pulse">
-                <div className="h-4 bg-slate-800 rounded w-1/2 mb-2" />
-                <div className="h-6 bg-slate-800 rounded w-1/3" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <SkeletonCard key={i} />
+      ))}
     </div>
   );
 }
 
 export function ProfileSkeleton() {
   return (
-    <div className="space-y-6 animate-pulse">
-      {/* Profile Header */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-8">
-        <div className="flex items-center gap-6">
-          <div className="w-24 h-24 bg-slate-800 rounded-full" />
-          <div className="flex-1">
-            <div className="h-8 bg-slate-800 rounded w-1/3 mb-2" />
-            <div className="h-4 bg-slate-800 rounded w-1/2 mb-4" />
-            <div className="flex gap-6">
-              {[...Array(2)].map((_, i) => (
-                <div key={i}>
-                  <div className="h-3 bg-slate-800 rounded w-16 mb-1" />
-                  <div className="h-6 bg-slate-800 rounded w-12" />
-                </div>
-              ))}
-            </div>
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      {/* Banner Skeleton */}
+      <Skeleton variant="rectangular" height={200} className="w-full rounded-xl mb-4" />
+      
+      {/* Avatar and Info */}
+      <div className="flex flex-col md:flex-row gap-6 mb-8">
+        <Skeleton variant="circular" width={120} height={120} />
+        <div className="flex-1 space-y-3">
+          <Skeleton variant="text" width="40%" height={32} />
+          <Skeleton variant="text" width="60%" />
+          <Skeleton variant="text" width="80%" />
+          <div className="flex gap-4 mt-4">
+            <Skeleton variant="rectangular" width={100} height={40} />
+            <Skeleton variant="rectangular" width={100} height={40} />
           </div>
         </div>
       </div>
-      
-      {/* Assets Grid */}
-      <div>
-        <div className="h-6 bg-slate-800 rounded w-32 mb-4" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <AssetCardSkeleton key={i} />
-          ))}
-        </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="glass rounded-xl p-4">
+            <Skeleton variant="text" width="60%" />
+            <Skeleton variant="text" width="80%" height={24} className="mt-2" />
+          </div>
+        ))}
       </div>
+
+      {/* Assets Grid */}
+      <SkeletonAssetGrid />
     </div>
   );
 }
-

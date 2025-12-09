@@ -33,6 +33,13 @@ import { cn } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import { useAssets } from '@/hooks/useAssets';
 import MintModal from '@/components/mint/MintModal';
+import { ActivityNotifications } from '@/components/landing/ActivityToast';
+import { TrustMarquee } from '@/components/landing/TrustMarquee';
+import GradientOrbs from '@/components/landing/GradientOrbs';
+import ROICalculator from '@/components/landing/ROICalculator';
+import { AnimatedHeading } from '@/components/ui/AnimatedText';
+import InteractiveTutorial from '@/components/landing/InteractiveTutorial';
+
 
 const container = {
   hidden: { opacity: 0 },
@@ -159,6 +166,8 @@ export default function Home() {
             
             {/* Grid Pattern */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_70%)]" />
+          
+            <GradientOrbs />
           </div>
 
           {/* Main Content */}
@@ -214,10 +223,8 @@ export default function Home() {
                   transition={{ delay: 0.5 }}
                   className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2"
                 >
-                  <Button
-                    variant="primary"
-                    onClick={() => setIsMintModalOpen(true)}
-                    className="text-base sm:text-lg px-8 py-5 shadow-2xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] transition-all duration-300 group"
+                  <Button variant="glow" onClick={() => setIsMintModalOpen(true)}
+                    className="text-base sm:text-lg px-8 py-5 group"
                   >
                     <Sparkles className="w-5 h-5 mr-2" />
                     Start Creating
@@ -932,40 +939,31 @@ export default function Home() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
-          className="max-w-6xl mx-auto px-4"
+          className="max-w-7xl mx-auto px-4"
         >
-          <div className="text-center mb-10">
+          <div className="text-center mb-6">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-300">
               Built on Trusted Infrastructure
             </h2>
             <p className="text-slate-400 text-lg">Powered by industry-leading protocols</p>
           </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { name: "Story Protocol", icon: Globe, color: "from-blue-500 to-cyan-500" },
-              { name: "Pinata IPFS", icon: Lock, color: "from-purple-500 to-pink-500" },
-              { name: "OpenRouter", icon: Zap, color: "from-amber-500 to-orange-500" },
-              { name: "Ethereum", icon: Award, color: "from-emerald-500 to-teal-500" }
-            ].map((partner, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="p-6 rounded-xl bg-slate-900/50 border border-white/5 hover:border-white/10 transition-all duration-300 text-center"
-              >
-                <div className={cn(
-                  "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center mx-auto mb-3",
-                  partner.color
-                )}>
-                  <partner.icon className="w-6 h-6 text-white" />
-                </div>
-                <p className="text-sm font-medium text-slate-300">{partner.name}</p>
-              </motion.div>
-            ))}
+          
+          <TrustMarquee variant="partners" speed={40} />
+          
+          <div className="mt-6">
+            <TrustMarquee variant="badges" speed={50} />
           </div>
+        </motion.section>
+
+        {/* ROI Calculator Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="max-w-7xl mx-auto px-4 mb-20"
+        >
+          <ROICalculator onCTAClick={() => setIsMintModalOpen(true)} />
         </motion.section>
 
         {/* Final CTA Section */}
@@ -1019,6 +1017,10 @@ export default function Home() {
         </motion.section>
         </div>
       </div>
+
+
+      <ActivityNotifications />
+      <InteractiveTutorial />
     </>
   );
 }

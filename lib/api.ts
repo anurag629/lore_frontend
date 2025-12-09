@@ -2,8 +2,31 @@
  * API client with authentication and automatic token refresh
  */
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import DOMPurify from 'dompurify';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+// Sanitize user data to prevent XSS attacks
+function sanitizeUserData(userData: any): any {
+  if (!userData || typeof userData !== 'object') return {};
+  
+  // Define allowed fields (whitelist approach)
+  const allowedFields = ['wallet_address', 'username', 'email', 'bio', 'avatar_url', 'banner_url', 'id'];
+  
+  const sanitized: any = {};
+  allowedFields.forEach(field => {
+    if (field in userData) {
+      // Sanitize string fields to prevent XSS
+      if (typeof userData[field] === 'string') {
+        sanitized[field] = DOMPurify.sanitize(userData[field]);
+      } else {
+        sanitized[field] = userData[field];
+      }
+    }
+  });
+  
+  return sanitized;
+}
 
 // Create axios instance
 export const api = axios.create({
@@ -46,7 +69,9 @@ export const tokenManager = {
   getUser: (): any | null => {
     if (typeof window === 'undefined') return null;
     const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    const userStr = user || "{}";
+    const parsedUser = JSON.parse(userStr);
+    return sanitizeUserData(parsedUser);
   },
 };
 
