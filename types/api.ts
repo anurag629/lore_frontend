@@ -48,6 +48,7 @@ export interface IPAsset {
   royalty_percentage: number;
   allow_derivatives: boolean;
   commercial_rights: boolean;
+  minting_fee: number;  // Minting fee in ETH for derivative creation
   derivative_count: number;
   derivatives?: IPAsset[];
   registration_status?: 'pending' | 'registered' | 'failed' | 'retrying';
@@ -91,6 +92,7 @@ export interface IPAssetListItem {
   derivative_count: number;
   allow_derivatives: boolean;
   commercial_rights: boolean;
+  minting_fee: number;  // Minting fee in ETH for derivative creation
   registration_status?: 'pending' | 'registered' | 'failed' | 'retrying';
   registration_error?: string;
   is_deleted?: boolean;
@@ -113,6 +115,7 @@ export interface CreateIPAssetData {
   royalty_percentage: number;
   allow_derivatives: boolean;
   commercial_rights: boolean;
+  minting_fee?: number;  // Minting fee in ETH (default: 0.005)
 }
 
 export interface CreateDerivativeData {
@@ -311,4 +314,117 @@ export interface MultiParentDerivativeData {
   media_url?: string;
   relationship_type?: 'remix' | 'spin_off' | 'adaptation';
   commercial_rights: boolean;
+}
+
+// ============================================================================
+// MINTING FEE TYPES
+// ============================================================================
+
+/**
+ * Breakdown of fee for a single parent asset in a derivative
+ */
+export interface MintingFeeBreakdown {
+  parent_asset_id: string;
+  parent_asset_title: string;
+  parent_creator: string;
+  parent_creator_id: number;
+  attribution_percentage: number;
+  base_minting_fee: number;
+  derivative_count: number;
+  popularity_factor: number;
+  fee_before_split: number;
+  fee_share: number;
+  fee_share_wei: string;
+}
+
+/**
+ * Complete fee calculation result for derivative creation
+ */
+export interface MintingFeeInfo {
+  total_fee: number;
+  total_fee_wei: string;
+  platform_fee: number;
+  creator_fee: number;
+  breakdown: MintingFeeBreakdown[];
+  is_free: boolean;
+}
+
+/**
+ * Status of a minting fee payment
+ */
+export type MintingFeeStatus = 'pending' | 'paid' | 'claimed' | 'failed';
+
+/**
+ * Record of a minting fee payment
+ */
+export interface MintingFeePayment {
+  id: string;  // UUID
+  payer_username: string;
+  payer_id: number;
+  derivative_title: string;
+  derivative_id: string;
+  parent_title: string;
+  parent_id: string;
+  parent_creator: string;
+  parent_creator_id: number;
+  fee_amount: number;
+  fee_amount_wei: string;
+  platform_fee: number;
+  creator_fee: number;
+  attribution_percentage: number;
+  transaction_hash: string | null;
+  block_number: number | null;
+  status: MintingFeeStatus;
+  created_at: string;
+  paid_at: string | null;
+  claimed_at: string | null;
+  is_received?: boolean;  // True if current user is the parent creator (receiving fee)
+}
+
+/**
+ * Fee statistics for a user
+ */
+export interface MintingFeeStats {
+  total_earned: number;
+  total_unclaimed: number;
+  total_claimed: number;
+  payment_count: number;
+  fees_paid_as_creator: number;
+  fees_paid_count: number;
+  assets_with_fees: AssetFeeInfo[];
+}
+
+/**
+ * Fee information for a single asset
+ */
+export interface AssetFeeInfo {
+  id: string;  // UUID
+  title: string;
+  thumbnail: string;
+  minting_fee: number;
+  derivative_count: number;
+  unclaimed_amount: number;
+  total_earned: number;
+  fee_payment_count: number;
+}
+
+/**
+ * Response when claiming minting fees
+ */
+export interface ClaimMintingFeesResponse {
+  claimed_amount: number;
+  claimed_count: number;
+  asset_id: string;
+  new_total_earnings: number;
+}
+
+/**
+ * Minting fee balance for an asset
+ */
+export interface MintingFeeBalance {
+  asset_id: string;
+  asset_title: string;
+  unclaimed_amount: number;
+  unclaimed_count: number;
+  minting_fee_setting: number;
 }

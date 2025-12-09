@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Compass, BarChart3, User, Sparkles, Settings, Plus, FolderOpen, MoreHorizontal } from 'lucide-react';
+import { Home, Compass, BarChart3, User, Sparkles, Settings, Plus, FolderOpen, MoreHorizontal, Coins } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -249,7 +249,14 @@ export default function Sidebar() {
               </Link>
               <Link href="/royalties" className="p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50" onClick={() => setShowMore(false)}>
                 Royalties
-                <p className="text-xs text-slate-500 mt-1">Track payments</p>
+                <p className="text-xs text-slate-500 mt-1">Track royalty payments</p>
+              </Link>
+              <Link href="/dashboard/fees" className="p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/50" onClick={() => setShowMore(false)}>
+                <div className="flex items-center gap-2">
+                  <Coins className="w-4 h-4 text-amber-400" />
+                  Minting Fees
+                </div>
+                <p className="text-xs text-slate-500 mt-1">Claim derivative fees</p>
               </Link>
             </div>
           </div>

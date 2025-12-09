@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Plus, Coins, Gavel, Zap, ChevronRight } from 'lucide-react';
+import { Plus, Coins, Gavel, Zap, ChevronRight, Wallet } from 'lucide-react';
 
 interface QuickActionProps {
   href?: string;
@@ -100,10 +100,11 @@ function QuickActionCard({
 interface QuickActionsProps {
   pendingRoyalties?: number;
   pendingDisputes?: number;
+  pendingMintingFees?: number;
   onMintClick?: () => void;
 }
 
-export default function QuickActions({ pendingRoyalties, pendingDisputes, onMintClick }: QuickActionsProps) {
+export default function QuickActions({ pendingRoyalties, pendingDisputes, pendingMintingFees, onMintClick }: QuickActionsProps) {
   const actions: Omit<QuickActionProps, 'index'>[] = [
     {
       onClick: onMintClick,
@@ -111,6 +112,14 @@ export default function QuickActions({ pendingRoyalties, pendingDisputes, onMint
       title: 'Mint Asset',
       description: 'Create new IP',
       variant: 'primary',
+    },
+    {
+      href: '/dashboard/fees',
+      icon: Wallet,
+      title: 'Minting Fees',
+      description: 'Claim derivative fees',
+      color: 'amber',
+      badge: pendingMintingFees && pendingMintingFees > 0 ? `${pendingMintingFees} pending` : undefined,
     },
     {
       href: '/royalties',

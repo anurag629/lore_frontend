@@ -97,6 +97,7 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
     royalty_percentage: 10,
     allow_derivatives: true,
     commercial_rights: true,
+    minting_fee: 0.005,  // Default minting fee in ETH
   });
   const [selectedLicensePreset, setSelectedLicensePreset] = useState<string>('open');
   const [dragActive, setDragActive] = useState(false);
@@ -267,6 +268,7 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
       royalty_percentage: formData.royalty_percentage,
       allow_derivatives: formData.allow_derivatives,
       commercial_rights: formData.commercial_rights,
+      minting_fee: formData.allow_derivatives ? formData.minting_fee : 0,  // Only charge fee if derivatives allowed
       media_file: file || undefined,
     };
 
@@ -291,6 +293,7 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
       royalty_percentage: 10,
       allow_derivatives: true,
       commercial_rights: true,
+      minting_fee: 0.005,
     });
     setCurrentStep('upload');
     setSelectedLicensePreset('open');
@@ -865,6 +868,66 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
                           </p>
                         </motion.div>
                       )}
+
+                      {/* Minting Fee Configuration - Only show if derivatives allowed */}
+                      {formData.allow_derivatives && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl"
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <Coins className="w-5 h-5 text-amber-400" />
+                            <label className="text-sm font-medium text-white">Derivative Minting Fee</label>
+                          </div>
+                          <p className="text-xs text-slate-400 mb-3">
+                            Fee others pay when creating derivatives of your work. Set to 0 for free remixes.
+                            You'll receive 95% of this fee (5% platform fee).
+                          </p>
+
+                          {/* Fee Presets */}
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {[0, 0.001, 0.005, 0.01, 0.05].map((preset) => (
+                              <button
+                                key={preset}
+                                type="button"
+                                onClick={() => setFormData({ ...formData, minting_fee: preset })}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                  formData.minting_fee === preset
+                                    ? 'bg-amber-500 text-white'
+                                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                }`}
+                              >
+                                {preset === 0 ? 'Free' : `${preset} ETH`}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Custom Slider */}
+                          <div className="flex items-center gap-4">
+                            <input
+                              type="range"
+                              min="0"
+                              max="0.1"
+                              step="0.001"
+                              value={formData.minting_fee}
+                              onChange={(e) => setFormData({ ...formData, minting_fee: parseFloat(e.target.value) })}
+                              className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                              disabled={loading}
+                            />
+                            <span className="text-amber-400 font-mono text-lg w-24 text-right">
+                              {formData.minting_fee === 0 ? 'FREE' : `${formData.minting_fee.toFixed(3)} ETH`}
+                            </span>
+                          </div>
+
+                          {/* Earnings Preview */}
+                          {formData.minting_fee > 0 && (
+                            <p className="text-xs text-slate-500 mt-2">
+                              You'll earn ~{(formData.minting_fee * 0.95).toFixed(4)} ETH per derivative (after 5% platform fee)
+                            </p>
+                          )}
+                        </motion.div>
+                      )}
                     </motion.div>
                   )}
 
@@ -931,9 +994,17 @@ export default function MintModal({ isOpen, onClose, onSuccess }: MintModalProps
                             </span>
                           </div>
                           {formData.commercial_rights && (
-                            <div className="flex items-center justify-between py-2">
+                            <div className="flex items-center justify-between py-2 border-b border-slate-700/50">
                               <span className="text-sm text-slate-400">Royalty Rate</span>
                               <span className="text-sm font-medium text-amber-400">{formData.royalty_percentage}%</span>
+                            </div>
+                          )}
+                          {formData.allow_derivatives && (
+                            <div className="flex items-center justify-between py-2">
+                              <span className="text-sm text-slate-400">Minting Fee</span>
+                              <span className={`text-sm font-medium ${formData.minting_fee === 0 ? 'text-green-400' : 'text-amber-400'}`}>
+                                {formData.minting_fee === 0 ? 'Free' : `${formData.minting_fee.toFixed(3)} ETH`}
+                              </span>
                             </div>
                           )}
                         </div>

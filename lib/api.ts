@@ -395,6 +395,49 @@ export const assetsAPI = {
     const response = await api.post(`/api/assets/assets/${id}/retry_registration/`);
     return response.data;
   },
+
+  // ============================================================================
+  // MINTING FEE ENDPOINTS
+  // ============================================================================
+
+  // Calculate fee before creating a derivative
+  calculateDerivativeFee: async (parents: Array<{
+    parent_asset_id: string;
+    attribution_percentage: number;
+  }>) => {
+    const response = await api.post('/api/assets/assets/calculate_derivative_fee/', {
+      parents,
+    });
+    return response.data;
+  },
+
+  // Get minting fee balance for an asset
+  getMintingFeeBalance: async (id: string) => {
+    const response = await api.get(`/api/assets/assets/${id}/minting_fee_balance/`);
+    return response.data;
+  },
+
+  // Claim minting fees for an asset
+  claimMintingFees: async (id: string) => {
+    const response = await api.post(`/api/assets/assets/${id}/claim_minting_fees/`);
+    return response.data;
+  },
+
+  // Get user's fee statistics
+  getMyFeeStats: async () => {
+    const response = await api.get('/api/assets/assets/my_fee_stats/');
+    return response.data;
+  },
+
+  // Get paginated list of fee payments
+  getMyFeePayments: async (params?: {
+    type?: 'received' | 'paid' | 'all';
+    status?: 'pending' | 'paid' | 'claimed' | 'all';
+    page?: number;
+  }) => {
+    const response = await api.get('/api/assets/assets/my_fee_payments/', { params });
+    return response.data;
+  },
 };
 
 // Collections API endpoints

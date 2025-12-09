@@ -26,8 +26,10 @@ import { useState, useRef, DragEvent, ChangeEvent, useEffect, useMemo } from 're
 import Button from '@/components/ui/Button';
 import { useAssets, useCreateDerivative, useCreateMultiParentDerivative } from '@/hooks/useAssets';
 import { useGenerateTitle, useEnhanceDescription, useSuggestLicense } from '@/hooks/useAI';
+import { useMintingFeeCalculation } from '@/hooks/useMintingFee';
 import { useToast } from '@/components/ui/Toast';
 import type { CreateDerivativeData, IPAssetListItem, IPAsset } from '@/types/api';
+import MintingFeeDisplay from './MintingFeeDisplay';
 
 interface RemixModalProps {
   isOpen: boolean;
@@ -121,6 +123,15 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
   const enhanceDescription = useEnhanceDescription();
   const suggestLicense = useSuggestLicense();
 
+  // Fee calculation hook
+  const {
+    feeInfo,
+    isLoading: feeLoading,
+    error: feeError,
+    calculateFee,
+    reset: resetFee,
+  } = useMintingFeeCalculation();
+
   const currentStepIndex = STEPS.findIndex((s) => s.key === currentStep);
   const isLoading = loading || loadingMulti;
 
@@ -128,6 +139,24 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
     () => parentSelections.reduce((sum, p) => sum + (Number(p.attribution_percentage) || 0), 0),
     [parentSelections]
   );
+
+  // Calculate fee when parents change
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (useMultiParents) {
+      // Multi-parent: only calculate if all parents are selected and attribution sums to 100
+      const validParents = parentSelections.filter(
+        (p) => p.parent_asset_id && p.attribution_percentage > 0
+      );
+      if (validParents.length > 0 && Math.abs(totalAttribution - 100) <= 0.01) {
+        calculateFee(validParents);
+      }
+    } else {
+      // Single parent: calculate with default parent
+      calculateFee([{ parent_asset_id: parentAsset.id, attribution_percentage: 100 }]);
+    }
+  }, [isOpen, useMultiParents, parentSelections, totalAttribution, parentAsset.id, calculateFee]);
 
   // Format wallet address for display
   const formatAddress = (address: string) => {
@@ -357,6 +386,7 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
     setSuccess(false);
     setShowTitleSuggestions(false);
     setTitleSuggestions([]);
+    resetFee();
     clearError();
     onClose();
   };
@@ -1201,6 +1231,14 @@ export default function RemixModal({ isOpen, onClose, onSuccess, parentAsset }: 
                           )}
                         </div>
                       </div>
+
+                      {/* Minting Fee Display */}
+                      <MintingFeeDisplay
+                        feeInfo={feeInfo}
+                        isLoading={feeLoading}
+                        error={feeError}
+                        showDetails={true}
+                      />
 
                       {/* Blockchain Info */}
                       <div className="p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl">
