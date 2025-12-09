@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Components
@@ -16,6 +16,7 @@ import {
   EnhancedAssetTable,
   GenealogyGraph,
 } from '@/components/dashboard';
+import MintModal from '@/components/mint/MintModal';
 
 // Hooks
 import { useDashboardStats } from '@/hooks/useDashboardStats';
@@ -24,6 +25,7 @@ import { useAssets } from '@/hooks/useAssets';
 export default function Dashboard() {
   const router = useRouter();
   const { stats, user, isAuthenticated, loading, activeAssets, archivedAssets } = useDashboardStats();
+  const [showMintModal, setShowMintModal] = useState(false);
 
   // Refetch function
   const { refetch } = useAssets(
@@ -83,7 +85,7 @@ export default function Dashboard() {
           <ActivityStream />
 
           {/* Quick Actions */}
-          <QuickActions />
+          <QuickActions onMintClick={() => setShowMintModal(true)} />
         </div>
 
         {/* ==================== MANAGEMENT ZONE ==================== */}
@@ -101,6 +103,16 @@ export default function Dashboard() {
         {/* Genealogy Graph */}
         <GenealogyGraph assets={activeAssets} />
       </div>
+
+      {/* Mint Modal */}
+      <MintModal
+        isOpen={showMintModal}
+        onClose={() => setShowMintModal(false)}
+        onSuccess={() => {
+          setShowMintModal(false);
+          refetch();
+        }}
+      />
     </div>
   );
 }

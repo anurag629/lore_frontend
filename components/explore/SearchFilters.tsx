@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Filter, X, ChevronDown } from 'lucide-react';
+import { Search, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SearchFiltersProps {
@@ -17,8 +17,177 @@ interface SearchFiltersProps {
   onFiltersChange: (filters: any) => void;
   sortBy: string;
   onSortChange: (sort: string) => void;
+  resultCount?: number;
 }
 
+// Search bar component - for the feed column
+export function SearchBar({
+  searchQuery,
+  onSearchChange,
+}: {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+}) {
+  return (
+    <div className="relative w-full">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+      <input
+        type="text"
+        id="search-input"
+        placeholder="Search..."
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className="w-full pl-9 pr-3 py-2 bg-slate-900/80 border border-slate-800 rounded-full text-sm text-slate-50 placeholder-slate-500 focus:outline-none focus:border-slate-700 focus:bg-slate-900 transition-all"
+      />
+    </div>
+  );
+}
+
+// Filter controls component - for the sidebar column
+export function FilterControls({
+  filters,
+  onFiltersChange,
+  sortBy,
+  onSortChange,
+  resultCount,
+}: {
+  filters: SearchFiltersProps['filters'];
+  onFiltersChange: (filters: any) => void;
+  sortBy: string;
+  onSortChange: (sort: string) => void;
+  resultCount?: number;
+}) {
+  const [showFilters, setShowFilters] = useState(false);
+
+  const handleFilterChange = (key: string, value: any) => {
+    onFiltersChange({
+      ...filters,
+      [key]: value,
+    });
+  };
+
+  const clearFilters = () => {
+    onFiltersChange({});
+  };
+
+  const hasActiveFilters = Object.values(filters).some(v => v !== undefined);
+  const activeFilterCount = Object.values(filters).filter(v => v !== undefined).length;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        {/* Filter Button */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm transition-colors ${
+            showFilters || hasActiveFilters
+              ? 'bg-amber-600 text-white'
+              : 'bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+          }`}
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+          <span className="hidden sm:inline">Filter</span>
+          {activeFilterCount > 0 && (
+            <span className="w-5 h-5 flex items-center justify-center bg-white/20 rounded-full text-xs">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+
+        {/* Sort Dropdown */}
+        <div className="relative">
+          <select
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value)}
+            className="appearance-none px-3 py-2 pr-8 bg-slate-900/80 border border-slate-800 rounded-full text-sm text-slate-300 focus:outline-none focus:border-slate-700 cursor-pointer"
+          >
+            <option value="-created_at">Recent</option>
+            <option value="created_at">Oldest</option>
+            <option value="-royalty_percentage">High Royalty</option>
+            <option value="royalty_percentage">Low Royalty</option>
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
+        </div>
+
+        {/* Results count */}
+        {resultCount !== undefined && (
+          <span className="text-xs text-slate-500 whitespace-nowrap">
+            {resultCount} {resultCount === 1 ? 'result' : 'results'}
+          </span>
+        )}
+      </div>
+
+      {/* Advanced Filters Panel */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              {/* Type Filter */}
+              <select
+                value={filters.isDerivative === undefined ? '' : filters.isDerivative ? 'true' : 'false'}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  handleFilterChange('isDerivative', value === '' ? undefined : value === 'true');
+                }}
+                className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-amber-500"
+              >
+                <option value="">All Types</option>
+                <option value="false">Original</option>
+                <option value="true">Remix</option>
+              </select>
+
+              {/* Remixable Filter */}
+              <select
+                value={filters.allowDerivatives === undefined ? '' : filters.allowDerivatives ? 'true' : 'false'}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  handleFilterChange('allowDerivatives', value === '' ? undefined : value === 'true');
+                }}
+                className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-amber-500"
+              >
+                <option value="">Remixable</option>
+                <option value="true">Can Remix</option>
+                <option value="false">No Remix</option>
+              </select>
+
+              {/* Commercial Filter */}
+              <select
+                value={filters.commercialRights === undefined ? '' : filters.commercialRights ? 'true' : 'false'}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  handleFilterChange('commercialRights', value === '' ? undefined : value === 'true');
+                }}
+                className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-amber-500"
+              >
+                <option value="">Commercial</option>
+                <option value="true">Allowed</option>
+                <option value="false">Personal Only</option>
+              </select>
+
+              {/* Clear Filters */}
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center gap-1 px-2 py-1.5 text-sm text-slate-400 hover:text-white transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Clear
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// Combined component for mobile - keeps everything together
 export function SearchFilters({
   searchQuery,
   onSearchChange,
@@ -26,6 +195,7 @@ export function SearchFilters({
   onFiltersChange,
   sortBy,
   onSortChange,
+  resultCount,
 }: SearchFiltersProps) {
   const [showFilters, setShowFilters] = useState(false);
 
@@ -41,154 +211,121 @@ export function SearchFilters({
   };
 
   const hasActiveFilters = Object.values(filters).some(v => v !== undefined);
+  const activeFilterCount = Object.values(filters).filter(v => v !== undefined).length;
 
   return (
-    <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-        <input
-          type="text"
-          id="search-input"
-          placeholder="Search by title, description, or creator... (⌘K)"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-lg text-slate-50 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
-        />
-      </div>
+    <div>
+      {/* Compact Header Bar - Single Row */}
+      <div className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-3">
+        {/* Search Input */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <input
+            type="text"
+            id="search-input-mobile"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 bg-slate-900/80 border border-slate-800 rounded-full text-sm text-slate-50 placeholder-slate-500 focus:outline-none focus:border-slate-700 focus:bg-slate-900 transition-all"
+          />
+        </div>
 
-      {/* Filter Toggle & Sort */}
-      <div className="flex items-center justify-between gap-4">
+        {/* Filter Button */}
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-300 hover:text-white hover:border-amber-500/50 transition-colors"
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm transition-colors ${
+            showFilters || hasActiveFilters
+              ? 'bg-amber-600 text-white'
+              : 'bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+          }`}
         >
-          <Filter className="w-4 h-4" />
-          <span>Filters</span>
-          {hasActiveFilters && (
-            <span className="px-2 py-0.5 bg-amber-600 text-white text-xs rounded-full">
-              {Object.values(filters).filter(v => v !== undefined).length}
+          <SlidersHorizontal className="w-4 h-4" />
+          {activeFilterCount > 0 && (
+            <span className="w-5 h-5 flex items-center justify-center bg-white/20 rounded-full text-xs">
+              {activeFilterCount}
             </span>
           )}
-          <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
         </button>
 
         {/* Sort Dropdown */}
-        <select
-          value={sortBy}
-          onChange={(e) => onSortChange(e.target.value)}
-          className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-50 focus:outline-none focus:border-amber-500"
-        >
-          <option value="-created_at">Most Recent</option>
-          <option value="created_at">Oldest First</option>
-          <option value="-royalty_percentage">Highest Royalty</option>
-          <option value="royalty_percentage">Lowest Royalty</option>
-          <option value="title">Title A-Z</option>
-          <option value="-title">Title Z-A</option>
-        </select>
+        <div className="relative">
+          <select
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value)}
+            className="appearance-none px-3 py-2 pr-8 bg-slate-900/80 border border-slate-800 rounded-full text-sm text-slate-300 focus:outline-none focus:border-slate-700 cursor-pointer"
+          >
+            <option value="-created_at">Recent</option>
+            <option value="created_at">Oldest</option>
+            <option value="-royalty_percentage">High Royalty</option>
+            <option value="royalty_percentage">Low Royalty</option>
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
+        </div>
       </div>
 
-      {/* Advanced Filters */}
+      {/* Advanced Filters Panel */}
       <AnimatePresence>
         {showFilters && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
+            className="overflow-hidden border-t border-slate-800/50"
           >
-            <div className="p-4 bg-slate-900 rounded-lg border border-slate-800 space-y-4">
-              {/* Clear Filters */}
-              {hasActiveFilters && (
-                <div className="flex justify-end">
+            <div className="px-3 py-3 sm:px-4 sm:py-4">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Type Filter */}
+                <select
+                  value={filters.isDerivative === undefined ? '' : filters.isDerivative ? 'true' : 'false'}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    handleFilterChange('isDerivative', value === '' ? undefined : value === 'true');
+                  }}
+                  className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-amber-500"
+                >
+                  <option value="">All Types</option>
+                  <option value="false">Original</option>
+                  <option value="true">Remix</option>
+                </select>
+
+                {/* Remixable Filter */}
+                <select
+                  value={filters.allowDerivatives === undefined ? '' : filters.allowDerivatives ? 'true' : 'false'}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    handleFilterChange('allowDerivatives', value === '' ? undefined : value === 'true');
+                  }}
+                  className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-amber-500"
+                >
+                  <option value="">Remixable</option>
+                  <option value="true">Can Remix</option>
+                  <option value="false">No Remix</option>
+                </select>
+
+                {/* Commercial Filter */}
+                <select
+                  value={filters.commercialRights === undefined ? '' : filters.commercialRights ? 'true' : 'false'}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    handleFilterChange('commercialRights', value === '' ? undefined : value === 'true');
+                  }}
+                  className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-sm text-slate-300 focus:outline-none focus:border-amber-500"
+                >
+                  <option value="">Commercial</option>
+                  <option value="true">Allowed</option>
+                  <option value="false">Personal Only</option>
+                </select>
+
+                {/* Clear Filters */}
+                {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="flex items-center gap-2 px-3 py-1 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1.5 text-sm text-slate-400 hover:text-white transition-colors"
                   >
-                    <X className="w-4 h-4" />
-                    Clear Filters
+                    <X className="w-3.5 h-3.5" />
+                    Clear
                   </button>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Derivative Filter */}
-                <div>
-                  <label className="block text-sm text-slate-400 mb-2">Type</label>
-                  <select
-                    value={filters.isDerivative === undefined ? '' : filters.isDerivative ? 'true' : 'false'}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      handleFilterChange('isDerivative', value === '' ? undefined : value === 'true');
-                    }}
-                    className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-50 focus:outline-none focus:border-amber-500"
-                  >
-                    <option value="">All Types</option>
-                    <option value="false">Original</option>
-                    <option value="true">Derivative</option>
-                  </select>
-                </div>
-
-                {/* Allow Derivatives Filter */}
-                <div>
-                  <label className="block text-sm text-slate-400 mb-2">Remixable</label>
-                  <select
-                    value={filters.allowDerivatives === undefined ? '' : filters.allowDerivatives ? 'true' : 'false'}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      handleFilterChange('allowDerivatives', value === '' ? undefined : value === 'true');
-                    }}
-                    className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-50 focus:outline-none focus:border-amber-500"
-                  >
-                    <option value="">All</option>
-                    <option value="true">Remixable</option>
-                    <option value="false">Not Remixable</option>
-                  </select>
-                </div>
-
-                {/* Commercial Rights Filter */}
-                <div>
-                  <label className="block text-sm text-slate-400 mb-2">Commercial Use</label>
-                  <select
-                    value={filters.commercialRights === undefined ? '' : filters.commercialRights ? 'true' : 'false'}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      handleFilterChange('commercialRights', value === '' ? undefined : value === 'true');
-                    }}
-                    className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-50 focus:outline-none focus:border-amber-500"
-                  >
-                    <option value="">All</option>
-                    <option value="true">Commercial Allowed</option>
-                    <option value="false">Personal Only</option>
-                  </select>
-                </div>
-
-                {/* Royalty Range */}
-                <div>
-                  <label className="block text-sm text-slate-400 mb-2">Min Royalty %</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={filters.royaltyMin || ''}
-                    onChange={(e) => handleFilterChange('royaltyMin', e.target.value ? parseInt(e.target.value) : undefined)}
-                    placeholder="0"
-                    className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-50 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-slate-400 mb-2">Max Royalty %</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={filters.royaltyMax || ''}
-                    onChange={(e) => handleFilterChange('royaltyMax', e.target.value ? parseInt(e.target.value) : undefined)}
-                    placeholder="100"
-                    className="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-50 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
+                )}
               </div>
             </div>
           </motion.div>
