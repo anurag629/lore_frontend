@@ -167,7 +167,6 @@ export default function AssetDetailPage() {
     // Stop polling after max attempts to prevent infinite loops
     if (pollCountRef.current >= MAX_POLL_ATTEMPTS) {
       setIsPolling(false);
-      console.log('Polling stopped: max attempts reached (3 minutes)');
       return;
     }
 

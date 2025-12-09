@@ -132,11 +132,6 @@ export default function GenealogyGraph({ assets }: GenealogyGraphProps) {
     const rootAssets = assets.filter(a => !a.is_derivative);
     const derivativeAssets = assets.filter(a => a.is_derivative);
 
-    // Debug logging
-    console.log('[GenealogyGraph] Total assets:', assets.length);
-    console.log('[GenealogyGraph] Root assets:', rootAssets.length, rootAssets.map(a => ({ id: a.id, title: a.title, derivative_count: a.derivative_count })));
-    console.log('[GenealogyGraph] Derivative assets:', derivativeAssets.length, derivativeAssets.map(a => ({ id: a.id, title: a.title, parent_asset_id: a.parent_asset_id, is_derivative: a.is_derivative })));
-
     // Layout constants
     const NODE_WIDTH = 220;
     const H_SPACING = 280; // Horizontal spacing between siblings

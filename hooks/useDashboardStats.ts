@@ -99,10 +99,6 @@ export function useDashboardStats() {
         const activeAssetIds = new Set(activeAssets.map(a => a.id));
         const externalDerivatives = uniqueDerivatives.filter(d => !activeAssetIds.has(d.id));
 
-        console.log('[useDashboardStats] Fetched derivatives:', uniqueDerivatives.length);
-        console.log('[useDashboardStats] External derivatives (not owned by user):', externalDerivatives.length);
-        console.log('[useDashboardStats] Derivative data:', uniqueDerivatives.map(d => ({ id: d.id, title: d.title, is_derivative: d.is_derivative, parent_asset_id: d.parent_asset_id })));
-
         setDerivativesOfOriginals(externalDerivatives);
       } catch (err) {
         console.error('Failed to fetch derivatives:', err);
