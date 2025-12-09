@@ -20,19 +20,20 @@ import MintModal from '@/components/mint/MintModal';
 
 // Hooks
 import { useDashboardStats } from '@/hooks/useDashboardStats';
-import { useAssets } from '@/hooks/useAssets';
 
 export default function Dashboard() {
   const router = useRouter();
-  const { stats, user, isAuthenticated, loading, activeAssets, archivedAssets } = useDashboardStats();
+  const {
+    stats,
+    user,
+    isAuthenticated,
+    loading,
+    activeAssets,
+    archivedAssets,
+    genealogyAssets,
+    refetch
+  } = useDashboardStats();
   const [showMintModal, setShowMintModal] = useState(false);
-
-  // Refetch function
-  const { refetch } = useAssets(
-    user?.id !== undefined
-      ? { creator: user.id }
-      : undefined
-  );
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -101,7 +102,7 @@ export default function Dashboard() {
         />
 
         {/* Genealogy Graph */}
-        <GenealogyGraph assets={activeAssets} />
+        <GenealogyGraph assets={genealogyAssets} />
       </div>
 
       {/* Mint Modal */}

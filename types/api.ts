@@ -45,6 +45,7 @@ export interface IPAsset {
   metadata_hash: string;
   is_derivative: boolean;
   parent_asset?: IPAsset | null;
+  parent_asset_id: string | null;  // UUID of parent asset (for derivatives)
   royalty_percentage: number;
   allow_derivatives: boolean;
   commercial_rights: boolean;
@@ -89,6 +90,7 @@ export interface IPAssetListItem {
   description: string;
   media_url: string;
   is_derivative: boolean;
+  parent_asset_id: string | null;  // UUID of parent asset (for derivatives)
   derivative_count: number;
   allow_derivatives: boolean;
   commercial_rights: boolean;

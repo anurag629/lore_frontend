@@ -2,9 +2,10 @@
  * Dashboard Statistics Hook
  * Aggregates data from multiple sources for the dashboard
  */
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
 import { useAssets } from './useAssets';
+import { assetsAPI } from '@/lib/api';
 import type { IPAssetListItem } from '@/types/api';
 
 export interface DashboardStats {
@@ -41,7 +42,8 @@ export function useDashboardStats() {
   // Fetch all user assets (active)
   const {
     assets: activeAssets,
-    loading: activeLoading
+    loading: activeLoading,
+    refetch: refetchActive
   } = useAssets(
     userId !== undefined ? { creator: userId, is_deleted: false } : undefined
   );
@@ -49,10 +51,77 @@ export function useDashboardStats() {
   // Fetch archived assets
   const {
     assets: archivedAssets,
-    loading: archivedLoading
+    loading: archivedLoading,
+    refetch: refetchArchived
   } = useAssets(
     userId !== undefined ? { creator: userId, is_deleted: true } : undefined
   );
+
+  // State for derivatives (children of user's original assets)
+  const [derivativesOfOriginals, setDerivativesOfOriginals] = useState<IPAssetListItem[]>([]);
+  const [derivativesLoading, setDerivativesLoading] = useState(false);
+
+  // Fetch derivatives of user's original assets for genealogy graph
+  useEffect(() => {
+    const fetchDerivatives = async () => {
+      // Get original assets (non-derivatives) that have derivatives
+      const originalsWithDerivatives = activeAssets.filter(
+        a => !a.is_derivative && a.derivative_count > 0
+      );
+
+      if (originalsWithDerivatives.length === 0) {
+        setDerivativesOfOriginals([]);
+        return;
+      }
+
+      setDerivativesLoading(true);
+      try {
+        // Fetch derivatives for each original asset
+        const derivativePromises = originalsWithDerivatives.map(async (asset) => {
+          try {
+            const derivatives = await assetsAPI.getDerivatives(asset.id);
+            return derivatives as IPAssetListItem[];
+          } catch (err) {
+            console.error(`Failed to fetch derivatives for asset ${asset.id}:`, err);
+            return [];
+          }
+        });
+
+        const allDerivatives = await Promise.all(derivativePromises);
+
+        // Flatten and dedupe (in case same derivative appears for multiple parents)
+        const flatDerivatives = allDerivatives.flat();
+        const uniqueDerivatives = Array.from(
+          new Map(flatDerivatives.map(d => [d.id, d])).values()
+        );
+
+        // Filter out derivatives that are already in activeAssets (user's own derivatives)
+        const activeAssetIds = new Set(activeAssets.map(a => a.id));
+        const externalDerivatives = uniqueDerivatives.filter(d => !activeAssetIds.has(d.id));
+
+        console.log('[useDashboardStats] Fetched derivatives:', uniqueDerivatives.length);
+        console.log('[useDashboardStats] External derivatives (not owned by user):', externalDerivatives.length);
+        console.log('[useDashboardStats] Derivative data:', uniqueDerivatives.map(d => ({ id: d.id, title: d.title, is_derivative: d.is_derivative, parent_asset_id: d.parent_asset_id })));
+
+        setDerivativesOfOriginals(externalDerivatives);
+      } catch (err) {
+        console.error('Failed to fetch derivatives:', err);
+        setDerivativesOfOriginals([]);
+      } finally {
+        setDerivativesLoading(false);
+      }
+    };
+
+    if (activeAssets.length > 0 && !activeLoading) {
+      fetchDerivatives();
+    }
+  }, [activeAssets, activeLoading]);
+
+  // Combined assets for genealogy graph (user's assets + derivatives of their originals)
+  const genealogyAssets = useMemo(() => {
+    // Combine user's assets with external derivatives
+    return [...activeAssets, ...derivativesOfOriginals];
+  }, [activeAssets, derivativesOfOriginals]);
 
   // Calculate aggregated stats
   const stats = useMemo<DashboardStats>(() => {
@@ -110,6 +179,11 @@ export function useDashboardStats() {
 
   const loading = authLoading || activeLoading || archivedLoading;
 
+  // Refetch function that refetches all data
+  const refetch = async () => {
+    await Promise.all([refetchActive(), refetchArchived()]);
+  };
+
   return {
     stats,
     user,
@@ -117,6 +191,9 @@ export function useDashboardStats() {
     loading,
     activeAssets,
     archivedAssets,
+    genealogyAssets, // Combined assets for genealogy graph
+    derivativesLoading,
+    refetch,
   };
 }
 

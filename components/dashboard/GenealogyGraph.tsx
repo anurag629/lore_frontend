@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -123,7 +123,7 @@ export default function GenealogyGraph({ assets }: GenealogyGraphProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedNode, setSelectedNode] = useState<IPAssetListItem | null>(null);
 
-  // Build graph data from assets
+  // Build graph data from assets using hierarchical tree layout
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
@@ -132,65 +132,81 @@ export default function GenealogyGraph({ assets }: GenealogyGraphProps) {
     const rootAssets = assets.filter(a => !a.is_derivative);
     const derivativeAssets = assets.filter(a => a.is_derivative);
 
-    // Position calculation
-    const NODE_WIDTH = 200;
-    const NODE_HEIGHT = 80;
-    const H_SPACING = 250;
-    const V_SPACING = 120;
+    // Debug logging
+    console.log('[GenealogyGraph] Total assets:', assets.length);
+    console.log('[GenealogyGraph] Root assets:', rootAssets.length, rootAssets.map(a => ({ id: a.id, title: a.title, derivative_count: a.derivative_count })));
+    console.log('[GenealogyGraph] Derivative assets:', derivativeAssets.length, derivativeAssets.map(a => ({ id: a.id, title: a.title, parent_asset_id: a.parent_asset_id, is_derivative: a.is_derivative })));
 
-    // Create nodes for root assets (top row)
-    rootAssets.forEach((asset, index) => {
-      nodes.push({
-        id: asset.id,
-        type: 'asset',
-        position: {
-          x: index * H_SPACING,
-          y: 0,
-        },
-        data: {
-          title: asset.title,
-          media_url: asset.media_url,
-          derivativeCount: asset.derivative_count,
-          isDerivative: false,
-          isRoot: true,
-          status: asset.registration_status,
-          asset: asset,
-        },
-      });
+    // Layout constants
+    const NODE_WIDTH = 220;
+    const H_SPACING = 280; // Horizontal spacing between siblings
+    const V_SPACING = 150; // Vertical spacing between levels
+
+    // Build parent -> children map
+    const childrenByParent = new Map<string, IPAssetListItem[]>();
+    derivativeAssets.forEach((asset) => {
+      const parentId = asset.parent_asset_id;
+      if (parentId) {
+        if (!childrenByParent.has(parentId)) {
+          childrenByParent.set(parentId, []);
+        }
+        childrenByParent.get(parentId)!.push(asset);
+      }
     });
 
-    // Create nodes for derivatives (subsequent rows)
-    // Group derivatives by potential parent (for now, just place them in rows)
-    derivativeAssets.forEach((asset, index) => {
-      const row = Math.floor(index / 4) + 1;
-      const col = index % 4;
+    // Build asset lookup map
+    const assetMap = new Map(assets.map(a => [a.id, a]));
 
+    // Track positions for each node
+    const nodePositions = new Map<string, { x: number; y: number }>();
+
+    // Calculate subtree width for each node (for proper centering)
+    const getSubtreeWidth = (assetId: string): number => {
+      const children = childrenByParent.get(assetId) || [];
+      if (children.length === 0) {
+        return NODE_WIDTH;
+      }
+      const childWidths = children.map(child => getSubtreeWidth(child.id));
+      const totalChildWidth = childWidths.reduce((sum, w) => sum + w, 0) + (children.length - 1) * (H_SPACING - NODE_WIDTH);
+      return Math.max(NODE_WIDTH, totalChildWidth);
+    };
+
+    // Position a subtree recursively
+    const positionSubtree = (assetId: string, x: number, y: number, asset: IPAssetListItem) => {
+      const children = childrenByParent.get(assetId) || [];
+      const subtreeWidth = getSubtreeWidth(assetId);
+
+      // Center this node over its subtree
+      const nodeX = x + (subtreeWidth - NODE_WIDTH) / 2;
+      nodePositions.set(assetId, { x: nodeX, y });
+
+      // Create node
       nodes.push({
-        id: asset.id,
+        id: assetId,
         type: 'asset',
-        position: {
-          x: col * H_SPACING,
-          y: row * V_SPACING,
-        },
+        position: { x: nodeX, y },
         data: {
           title: asset.title,
           media_url: asset.media_url,
           derivativeCount: asset.derivative_count,
-          isDerivative: true,
-          isRoot: false,
+          isDerivative: asset.is_derivative,
+          isRoot: !asset.is_derivative,
           status: asset.registration_status,
           asset: asset,
         },
       });
 
-      // Create edges from root assets to derivatives
-      // Since we don't have parent_id in list items, connect to first root with derivatives
-      const potentialParent = rootAssets.find(r => r.derivative_count > 0);
-      if (potentialParent) {
+      // Position children
+      let childX = x;
+      children.forEach((child) => {
+        const childWidth = getSubtreeWidth(child.id);
+        positionSubtree(child.id, childX, y + V_SPACING, child);
+
+        // Create edge from parent to child
         edges.push({
-          id: `e-${potentialParent.id}-${asset.id}`,
-          source: potentialParent.id,
-          target: asset.id,
+          id: `e-${assetId}-${child.id}`,
+          source: assetId,
+          target: child.id,
           type: 'smoothstep',
           animated: true,
           style: { stroke: '#f59e0b', strokeWidth: 2 },
@@ -199,14 +215,72 @@ export default function GenealogyGraph({ assets }: GenealogyGraphProps) {
             color: '#f59e0b',
           },
         });
-      }
+
+        childX += childWidth + (H_SPACING - NODE_WIDTH);
+      });
+    };
+
+    // Position all root assets and their subtrees
+    let currentX = 0;
+    rootAssets.forEach((root) => {
+      const subtreeWidth = getSubtreeWidth(root.id);
+      positionSubtree(root.id, currentX, 0, root);
+      currentX += subtreeWidth + H_SPACING;
     });
+
+    // Handle orphan derivatives (derivatives whose parent is not in the asset list)
+    const positionedIds = new Set(nodePositions.keys());
+    const orphanDerivatives = derivativeAssets.filter(d => !positionedIds.has(d.id));
+
+    if (orphanDerivatives.length > 0) {
+      // Position orphans in a separate row below
+      const orphanY = rootAssets.length > 0 ? V_SPACING * 2 : 0;
+      orphanDerivatives.forEach((asset, index) => {
+        const x = index * H_SPACING;
+        nodes.push({
+          id: asset.id,
+          type: 'asset',
+          position: { x, y: orphanY },
+          data: {
+            title: asset.title,
+            media_url: asset.media_url,
+            derivativeCount: asset.derivative_count,
+            isDerivative: true,
+            isRoot: false,
+            status: asset.registration_status,
+            asset: asset,
+          },
+        });
+
+        // Try to create edge to parent even if parent not visible
+        if (asset.parent_asset_id && assetMap.has(asset.parent_asset_id)) {
+          edges.push({
+            id: `e-${asset.parent_asset_id}-${asset.id}`,
+            source: asset.parent_asset_id,
+            target: asset.id,
+            type: 'smoothstep',
+            animated: true,
+            style: { stroke: '#f59e0b', strokeWidth: 2 },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: '#f59e0b',
+            },
+          });
+        }
+      });
+    }
 
     return { nodes, edges };
   }, [assets]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Update nodes and edges when assets change
+  useEffect(() => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+  }, [initialNodes, initialEdges, setNodes, setEdges]);
 
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     setSelectedNode(node.data.asset);
